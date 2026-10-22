@@ -20,6 +20,7 @@ import {
   ResearchProject,
   ConsumableSupply,
   ConsumedSupplyItem,
+  AiDocMeta,
 } from '../types';
 import { callApi, getToken, setToken, setAuthLostHandler, ApiError, ApiResponse } from './api';
 
@@ -61,6 +62,7 @@ let me: User | null = null;
 let config: PublicConfig = { registration: 'approval', labName: '', allowedDomains: '' };
 let inflight = 0;
 let dataVer: string | null = null;
+let aiDocs: AiDocMeta[] = []; // danh sách tài liệu AI (chỉ Admin), không gồm nội dung
 
 /* -------- Bản dữ liệu lưu ở trình duyệt: mở lại trang là thấy ngay, cập nhật ngầm sau -------- */
 const SNAPSHOT_KEY = 'lablog_snapshot_v1';
@@ -73,7 +75,7 @@ function saveSnapshotSoon() {
     snapshotTimer = null;
     if (!me) return;
     try {
-      const json = JSON.stringify({ userId: me.id, ver: dataVer, me, config, db });
+      const json = JSON.stringify({ userId: me.id, ver: dataVer, me, config, db, aiDocs });
       if (json.length < 4_000_000) localStorage.setItem(SNAPSHOT_KEY, json);
       else localStorage.removeItem(SNAPSHOT_KEY);
     } catch {
@@ -139,6 +141,7 @@ function hydrate(data: any) {
   if (data?.me) me = data.me;
   if (data?.config) config = data.config;
   if (data?.ver) dataVer = data.ver;
+  if (Array.isArray(data?.aiDocs)) aiDocs = data.aiDocs;
   notify();
   saveSnapshotSoon();
 }
@@ -317,6 +320,7 @@ export const LabStorage = {
     me = snap.me;
     config = snap.config || config;
     dataVer = snap.ver;
+    aiDocs = Array.isArray((snap as any).aiDocs) ? (snap as any).aiDocs : [];
     return me;
   },
 
@@ -395,6 +399,7 @@ export const LabStorage = {
     setToken(null);
     me = null;
     dataVer = null;
+    aiDocs = [];
     db = emptyStore();
     clearSnapshot();
     notify();
@@ -485,6 +490,57 @@ export const LabStorage = {
 
   getConsumableSupplies(): ConsumableSupply[] {
     return db.supplies;
+  },
+
+  /* ---------------- Tài liệu cho Trợ lý AI (Admin) ---------------- */
+  getAiDocs(): AiDocMeta[] {
+    return aiDocs;
+  },
+
+  async saveAiDoc(doc: {
+    docId?: string;
+    title: string;
+    category: string;
+    equipmentId?: string;
+    sourceName?: string;
+    content: string;
+  }): Promise<{ success: boolean; docId?: string; error?: string }> {
+    try {
+      const data = await call('saveAiDoc', doc);
+      aiDocs = data.aiDocs || aiDocs;
+      notify();
+      return { success: true, docId: data.docId };
+    } catch (e) {
+      return { success: false, error: errMsg(e, 'Không lưu được tài liệu.') };
+    }
+  },
+
+  async deleteAiDoc(docId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const data = await call('deleteAiDoc', { docId });
+      aiDocs = data.aiDocs || aiDocs.filter((d) => d.docId !== docId);
+      notify();
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: errMsg(e, 'Không xóa được tài liệu.') };
+    }
+  },
+
+  async getAiDocContent(docId: string): Promise<{ success: boolean; doc?: any; error?: string }> {
+    try {
+      return { success: true, doc: await call('getAiDoc', { docId }) };
+    } catch (e) {
+      return { success: false, error: errMsg(e, 'Không tải được nội dung tài liệu.') };
+    }
+  },
+
+  /** Xem thử: với câu hỏi này, Trợ lý sẽ được gửi kèm những đoạn tài liệu / thông tin thiết bị nào. */
+  async previewAiContext(question: string, equipmentId?: string): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      return { success: true, data: await call('aiContext', { question, equipmentId, maxChars: 7000 }) };
+    } catch (e) {
+      return { success: false, error: errMsg(e, 'Không kiểm tra được.') };
+    }
   },
 
   /* ---------------- Email / hộp thư ---------------- */

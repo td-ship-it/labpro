@@ -130,6 +130,7 @@ Tôi có thể giúp bạn:
         equipmentList,
         bookings,
         currentUser,
+        equipmentId: initialEquipmentContext?.id,
       });
 
       const modelMessage: ChatMessage = {
@@ -139,6 +140,8 @@ Tôi có thể giúp bạn:
         timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         enableSearch,
         grounding: response.grounding,
+        docSources: response.docSources,
+        note: response.note,
       };
 
       setMessages((prev) => [...prev, modelMessage]);
@@ -427,6 +430,21 @@ Tôi có thể giúp bạn:
                     <div>{renderFormattedMarkdown(msg.content)}</div>
                   )}
                 </div>
+
+                {/* Tài liệu nội bộ đã dùng để trả lời */}
+                {msg.role === 'model' && !msg.isError && msg.docSources && msg.docSources.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-600 space-y-0.5">
+                    <div className="font-semibold text-indigo-700">📚 Tài liệu của phòng Lab đã tham khảo:</div>
+                    {msg.docSources.map((d) => (
+                      <div key={d.n}>
+                        [{d.n}] {d.title}
+                        {d.parts > 1 ? ` — đoạn ${d.part}/${d.parts}` : ''}
+                        {d.equipmentCode ? ` · ${d.equipmentCode}` : ''}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {msg.role === 'model' && msg.note && <div className="mt-1 text-[11px] text-amber-700">{msg.note}</div>}
 
                 {/* Google Search Grounding Section (Display verified web queries and source links) */}
                 {msg.grounding && (

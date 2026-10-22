@@ -40,6 +40,7 @@ const loadQuickNotesModal = () => import('./components/QuickNotesModal');
 const loadEquipmentQRModal = () => import('./components/EquipmentQRModal');
 const loadQRScannerModal = () => import('./components/QRScannerModal');
 const loadGeminiChatModal = () => import('./components/GeminiChatModal');
+const loadAiDocsManager = () => import('./components/AiDocsManager');
 const DashboardOverview = lazy(() => loadDashboardOverview().then((m) => ({ default: m.DashboardOverview })));
 const BookingCalendar = lazy(() => loadBookingCalendar().then((m) => ({ default: m.BookingCalendar })));
 const UsageLogbook = lazy(() => loadUsageLogbook().then((m) => ({ default: m.UsageLogbook })));
@@ -54,6 +55,7 @@ const QuickNotesModal = lazy(() => loadQuickNotesModal().then((m) => ({ default:
 const EquipmentQRModal = lazy(() => loadEquipmentQRModal().then((m) => ({ default: m.EquipmentQRModal })));
 const QRScannerModal = lazy(() => loadQRScannerModal().then((m) => ({ default: m.QRScannerModal })));
 const GeminiChatModal = lazy(() => loadGeminiChatModal().then((m) => ({ default: m.GeminiChatModal })));
+const AiDocsManager = lazy(() => loadAiDocsManager().then((m) => ({ default: m.AiDocsManager })));
 const preloadAll = () => {
   [
     loadDashboardOverview,
@@ -599,6 +601,10 @@ export default function App() {
           )}
 
           {activeTab === 'users' && <UserManager currentUser={currentUser} allUsers={allUsers} onRefresh={refreshAllState} />}
+
+          {activeTab === 'aidocs' && currentUser.role === 'admin' && (
+            <AiDocsManager currentUser={currentUser} equipmentList={equipmentList} />
+          )}
 
           {activeTab === 'analytics' && (
             <AnalyticsView

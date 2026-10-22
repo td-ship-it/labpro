@@ -51,7 +51,9 @@ export function setAuthLostHandler(fn: () => void) {
 export async function callApi<T = any>(action: string, payload?: unknown): Promise<ApiResponse<T>> {
   let res: Response;
   try {
-    res = await fetch(action === 'importSampleData' ? '/api?a=importSampleData' : '/api', {
+    // Thao tác gửi dữ liệu lớn (nạp mẫu, tài liệu AI) được Worker cho phép gói tin lớn hơn
+    const big = action === 'importSampleData' || action === 'saveAiDoc';
+    res = await fetch(big ? `/api?a=${action}` : '/api', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, token: getToken(), payload: payload ?? {} }),

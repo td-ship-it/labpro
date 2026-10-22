@@ -106,7 +106,7 @@ async function handleApi(request, env) {
   const nc = notConfigured(env);
   if (nc) return nc;
 
-  const isImport = new URL(request.url).searchParams.get('a') === 'importSampleData';
+  const isImport = ['importSampleData', 'saveAiDoc'].includes(new URL(request.url).searchParams.get('a'));
   const { data, error } = await readBody(request, isImport ? MAX_IMPORT_BODY : MAX_BODY);
   if (error) return error;
   if (!data || typeof data.action !== 'string') return json({ ok: false, error: 'Thiếu tên thao tác.' }, 400);
@@ -248,20 +248,62 @@ async function handleChat(request, env) {
   // Câu hỏi hiện tại đã nằm cuối lịch sử thì bỏ đi để không gửi trùng
   if (history.length && history[history.length - 1].role === 'user' && history[history.length - 1].text.trim() === message) history.pop();
 
+  // Tài liệu nội bộ + thông tin thiết bị liên quan (từ Google Sheet). Lỗi thì vẫn trả lời bình thường.
+  const recent = history.filter((h) => h.role === 'user').slice(-2).map((h) => h.text).join(' ');
+  const kb = await fetchKnowledge(env, data.token, message, recent, data.equipmentId, info.provider === 'gemini' ? 20000 : 7000);
+  data.knowledge = kb;
+  const docSources = kb ? kb.docs.map((d) => ({ n: d.n, title: d.title, part: d.part, parts: d.parts, equipmentCode: d.equipmentCode })) : [];
+
   if (info.provider === 'gemini') {
     const g = await askGemini(env, data, history, message);
-    if (g.ok) return json({ ...g.result, provider: 'gemini', model: info.model });
+    if (g.ok) return json({ ...g.result, docSources, provider: 'gemini', model: info.model });
     // Gemini hết hạn mức / lỗi máy chủ → dùng Workers AI miễn phí nếu có
     if (env.AI && (g.status === 429 || g.status >= 500)) {
       const w = await askWorkersAI(env, data, history, message);
-      if (w.ok) return json({ ...w.result, provider: 'workers-ai', model: w.model, note: 'Gemini tạm hết hạn mức, đã trả lời bằng Cloudflare AI (không tra cứu Google).' });
+      if (w.ok) return json({ ...w.result, docSources, provider: 'workers-ai', model: w.model, note: 'Gemini tạm hết hạn mức, đã trả lời bằng Cloudflare AI (không tra cứu Google).' });
     }
     return json({ error: g.error, code: g.code }, g.status === 429 ? 429 : 502);
   }
 
   const w = await askWorkersAI(env, data, history, message);
-  if (w.ok) return json({ ...w.result, provider: 'workers-ai', model: w.model });
+  if (w.ok) return json({ ...w.result, docSources, provider: 'workers-ai', model: w.model });
   return json({ error: w.error, code: w.code }, w.status || 502);
+}
+
+async function fetchKnowledge(env, token, question, recent, equipmentId, maxChars) {
+  if (!env.APPS_SCRIPT_URL || !env.PROXY_KEY) return null;
+  try {
+    const r = await callAppsScript(env, {
+      action: 'aiContext',
+      token,
+      key: env.PROXY_KEY,
+      payload: { question, recent, equipmentId: typeof equipmentId === 'string' ? equipmentId : undefined, maxChars },
+    });
+    if (!r.ok || !r.data) return null;
+    return { equipment: String(r.data.equipment || ''), docs: Array.isArray(r.data.docs) ? r.data.docs : [] };
+  } catch (e) {
+    console.error('aiContext:', e);
+    return null;
+  }
+}
+
+function knowledgeBlock(kb) {
+  if (!kb) return '';
+  let out = '';
+  if (kb.docs.length) {
+    out += '\n\n[TÀI LIỆU NỘI BỘ CỦA PHÒNG LAB — do Quản trị viên cung cấp]\n';
+    for (const d of kb.docs) {
+      out += `\n[${d.n}] «${d.title}»${d.equipmentCode ? ' (thiết bị ' + d.equipmentCode + ')' : ''}${d.parts > 1 ? ` — đoạn ${d.part}/${d.parts}` : ''}:\n${d.content}\n`;
+    }
+  }
+  if (kb.equipment) out += '\n\n[THÔNG TIN THIẾT BỊ ĐƯỢC HỎI — SOP, an toàn, Quick Notes, lịch hôm nay]\n' + kb.equipment;
+  if (out) {
+    out +=
+      '\n\nQUY TẮC DÙNG TÀI LIỆU: Ưu tiên trả lời theo tài liệu nội bộ và thông tin thiết bị ở trên; khi dùng tài liệu nào thì ghi số [1], [2]… ngay sau ý đó. ' +
+      'Nếu tài liệu nội bộ không đề cập, nói rõ "Tài liệu của phòng Lab chưa đề cập" rồi mới trả lời theo kiến thức chung. ' +
+      'Nếu tài liệu nội bộ khác với kiến thức chung, làm theo tài liệu nội bộ.';
+  }
+  return out;
 }
 
 function systemPrompt(data, canSearch, maxContext) {
@@ -272,6 +314,7 @@ function systemPrompt(data, canSearch, maxContext) {
       : 'Bạn KHÔNG tra cứu được Internet. Với tiêu chuẩn, số hiệu văn bản, giá cả hay số liệu có thể đã thay đổi, nói rõ đó là kiến thức chung và khuyên người dùng đối chiếu tài liệu gốc/nhà sản xuất. Không bịa nguồn hay đường link.'
   );
   if (data.labContext) system += `\n\n[DỮ LIỆU NGỮ CẢNH PHÒNG THÍ NGHIỆM]:\n${JSON.stringify(data.labContext).slice(0, maxContext)}`;
+  system += knowledgeBlock(data.knowledge);
   return system;
 }
 
@@ -314,7 +357,7 @@ async function askWorkersAI(env, data, history, message) {
   const model = env.AI_MODEL || DEFAULT_WORKERS_AI_MODEL;
   if (!env.AI) return { ok: false, status: 503, code: 'NO_AI', error: 'Chưa bật Cloudflare Workers AI (mục [ai] trong wrangler.toml).', model };
   // Ngữ cảnh gọn hơn Gemini để tiết kiệm lượt miễn phí
-  const messages = [{ role: 'system', content: systemPrompt(data, false, 12000) }];
+  const messages = [{ role: 'system', content: systemPrompt(data, false, 6000) }];
   for (const h of history.slice(-6)) messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: h.text.slice(0, 2500) });
   messages.push({ role: 'user', content: message });
   try {

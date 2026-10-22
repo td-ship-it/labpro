@@ -87,6 +87,12 @@ var SCHEMA = {
     cols: ['id', 'code', 'name', 'category', 'unit', 'unitCostVND', 'stockQuantity', 'compatibleCategory'],
     num: ['unitCostVND', 'stockQuantity'],
   },
+  // Tài liệu cho Trợ lý AI: mỗi dòng là MỘT ĐOẠN của tài liệu (tài liệu dài được chia nhiều đoạn cùng docId)
+  aiDocs: {
+    sheet: 'TaiLieuAI',
+    cols: ['id', 'docId', 'title', 'category', 'equipmentId', 'part', 'parts', 'content', 'sourceName', 'createdBy', 'createdAt', 'updatedAt'],
+    num: ['part', 'parts'],
+  },
 };
 var AUDIT_SHEET = 'LichSuThaoTac';
 var AUDIT_COLS = ['thoiGian', 'nguoiThucHien', 'hanhDong', 'chiTiet'];
@@ -214,7 +220,11 @@ function sheet_(name) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var def = SCHEMA[name];
   var sh = ss.getSheetByName(def.sheet);
-  if (!sh) throw fail_('Thiếu sheet "' + def.sheet + '". Hãy chạy hàm caiDat trong Apps Script.', 'SETUP');
+  if (!sh) {
+    // Bản cập nhật thêm sheet mới (vd. TaiLieuAI): tự tạo để không phải chạy lại caiDat
+    sh = ss.insertSheet(def.sheet);
+    prepareSheet_(sh, def.cols);
+  }
   return sh;
 }
 
@@ -497,7 +507,35 @@ function remove_(name, id) {
   (REMOVED[name] = REMOVED[name] || []).push(id);
 }
 
+/** Xóa mọi dòng thỏa điều kiện bằng một lần ghi lại cả bảng (nhanh hơn xóa từng dòng). */
+function removeWhere_(name, pred) {
+  var t = tblW_(name);
+  var keep = [], gone = [];
+  t.rows.slice().sort(function (a, b) { return t.rowOf[a.id] - t.rowOf[b.id]; }).forEach(function (o) {
+    (pred(o) ? gone : keep).push(o);
+  });
+  if (!gone.length) return 0;
+  t.dirty = true;
+  var oldCount = t.rows.length;
+  var block = keep.map(function (o) { return rowFor_(t, o); });
+  if (block.length) {
+    var rng = t.sh.getRange(2, 1, block.length, t.headers.length);
+    rng.setNumberFormat('@');
+    rng.setValues(block);
+  }
+  var lastData = Math.max(t.sh.getLastRow(), oldCount + 1);
+  if (lastData > block.length + 1) t.sh.getRange(block.length + 2, 1, lastData - block.length - 1, t.headers.length).clearContent();
+  t.rows = keep;
+  t.rowOf = {};
+  var raw = {};
+  keep.forEach(function (o, i) { t.rowOf[o.id] = i + 2; raw[o.id] = block[i]; });
+  t.raw = raw;
+  gone.forEach(function (o) { (REMOVED[name] = REMOVED[name] || []).push(o.id); });
+  return gone.length;
+}
+
 function patch_(name, obj) {
+  if (name === 'aiDocs') return; // nội dung tài liệu không gửi về trình duyệt qua đây (có thể rất lớn)
   var clean = name === 'users' ? pubUser_(obj) : obj;
   var list = PATCH[name] = PATCH[name] || [];
   for (var i = 0; i < list.length; i++) if (list[i].id === obj.id) { list[i] = clean; return; }
@@ -676,7 +714,7 @@ var PUBLIC_ACTIONS = ['login', 'register', 'requestReset', 'resetPassword', 'pub
 var WRITE_ACTIONS = ['register', 'resetPassword','changePassword', 'createBooking', 'cancelBooking',
   'checkIn', 'checkOut', 'sendReminder', 'markEmailRead', 'markAllEmailsRead', 'addQuickNote', 'updateQuickNote',
   'deleteQuickNote', 'addMaintenanceRecord', 'deleteMaintenanceRecord', 'upsertEquipment', 'deleteEquipment', 'upsertUser',
-  'toggleUserStatus', 'upsertProject', 'deleteProject', 'upsertSupply', 'importSampleData'];
+  'toggleUserStatus', 'upsertProject', 'deleteProject', 'upsertSupply', 'importSampleData', 'saveAiDoc', 'deleteAiDoc'];
 
 var ACTIONS = {
   publicConfig: function () { return publicConfig_(); },
@@ -711,6 +749,10 @@ var ACTIONS = {
   deleteProject: deleteProject_,
   upsertSupply: upsertSupply_,
   importSampleData: importSampleData_,
+  saveAiDoc: saveAiDoc_,
+  deleteAiDoc: deleteAiDoc_,
+  getAiDoc: getAiDoc_,
+  aiContext: aiContext_,
 };
 
 /* ============================================================================
@@ -880,6 +922,7 @@ function bootstrap_(user) {
     maintenance: newestFirst_(all_('maintenance')),
     projects: newestFirst_(all_('projects')),
     supplies: newestFirst_(all_('supplies')),
+    aiDocs: admin ? aiDocList_() : [],
     config: publicConfig_(),
     serverTime: now_().iso,
     ver: dataVer_(),
@@ -1624,7 +1667,266 @@ function importSampleData_(ctx) {
 }
 
 /* ============================================================================
- * 14. CÀI ĐẶT — chạy hàm `caiDat` một lần từ trình soạn thảo Apps Script.
+ * 14. TÀI LIỆU CHO TRỢ LÝ AI
+ *     Admin thêm tài liệu (nội quy, SOP, xử lý sự cố...). Mỗi câu hỏi, máy chủ tìm các đoạn
+ *     liên quan nhất (tiếng Việt có/không dấu) + thông tin thiết bị (SOP, an toàn, Quick Notes)
+ *     và gửi kèm cho Trợ lý AI. Tài liệu không bao giờ gửi nguyên cả kho cho AI.
+ * ========================================================================== */
+var AI_DOC_MAX_CHARS = 400000;   // tối đa mỗi tài liệu (~150 trang văn bản)
+var AI_CHUNK = 1400;             // độ dài mỗi đoạn
+var AI_DOC_CATEGORIES = ['Nội quy & quy định', 'SOP / Hướng dẫn vận hành', 'An toàn hóa chất', 'Xử lý sự cố', 'Bảo trì & hiệu chuẩn', 'Khác'];
+
+/** Chia văn bản thành các đoạn ~AI_CHUNK ký tự, ưu tiên cắt ở chỗ xuống dòng / hết câu. */
+function chunkText_(text) {
+  var t = String(text || '').replace(/\r\n?/g, '\n').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  var out = [];
+  while (t.length > AI_CHUNK) {
+    var cut = -1;
+    var win = t.slice(0, AI_CHUNK);
+    ['\n\n', '\n', '. ', '; ', ', ', ' '].some(function (sep) {
+      var i = win.lastIndexOf(sep);
+      if (i > AI_CHUNK * 0.5) { cut = i + sep.length; return true; }
+      return false;
+    });
+    if (cut < 0) cut = AI_CHUNK;
+    out.push(t.slice(0, cut).trim());
+    t = t.slice(cut).trim();
+  }
+  if (t) out.push(t);
+  return out;
+}
+
+function aiDocList_() {
+  var map = {};
+  all_('aiDocs').forEach(function (r) {
+    var d = map[r.docId];
+    if (!d) {
+      d = map[r.docId] = { docId: r.docId, title: r.title, category: r.category, equipmentId: r.equipmentId, sourceName: r.sourceName,
+        createdBy: r.createdBy, createdAt: r.createdAt, updatedAt: r.updatedAt, parts: 0, chars: 0 };
+    }
+    d.parts++;
+    d.chars += String(r.content || '').length;
+  });
+  return Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) {
+    return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
+  });
+}
+
+function saveAiDoc_(ctx) {
+  var u = ctx.user;
+  requireAdmin_(u);
+  var p = ctx.payload || {};
+  var title = str_(p.title, 200);
+  if (!title) throw fail_('Vui lòng nhập tên tài liệu.');
+  var text = String(p.content || '').trim();
+  if (text.length < 20) throw fail_('Nội dung tài liệu quá ngắn (cần ít nhất 20 ký tự).');
+  if (text.length > AI_DOC_MAX_CHARS) throw fail_('Tài liệu quá dài (' + text.length + ' ký tự). Tối đa ' + AI_DOC_MAX_CHARS + ' ký tự — hãy tách thành nhiều tài liệu.');
+  var equipmentId = optStr_(p.equipmentId, 80);
+  if (equipmentId && !find_('equipment', equipmentId)) throw fail_('Thiết bị gắn với tài liệu không tồn tại.');
+
+  var docId = str_(p.docId, 80) || newId_('doc');
+  var old = all_('aiDocs').filter(function (r) { return r.docId === docId; })[0];
+  var nowIso = now_().iso;
+  removeWhere_('aiDocs', function (r) { return r.docId === docId; });
+
+  var parts = chunkText_(text);
+  var rows = parts.map(function (c, i) {
+    return {
+      id: docId + '-' + (i + 1),
+      docId: docId,
+      title: title,
+      category: AI_DOC_CATEGORIES.indexOf(p.category) >= 0 ? p.category : 'Khác',
+      equipmentId: equipmentId,
+      part: i + 1,
+      parts: parts.length,
+      content: c,
+      sourceName: optStr_(p.sourceName, 200),
+      createdBy: old ? old.createdBy : u.email,
+      createdAt: old ? old.createdAt : nowIso,
+      updatedAt: nowIso,
+    };
+  });
+  insertMany_('aiDocs', rows);
+  audit_(u, old ? 'Sửa tài liệu AI' : 'Thêm tài liệu AI', title + ' · ' + text.length + ' ký tự · ' + parts.length + ' đoạn');
+  return { docId: docId, aiDocs: aiDocList_() };
+}
+
+function deleteAiDoc_(ctx) {
+  var u = ctx.user;
+  requireAdmin_(u);
+  var docId = str_(ctx.payload.docId, 80);
+  var first = all_('aiDocs').filter(function (r) { return r.docId === docId; })[0];
+  var n = removeWhere_('aiDocs', function (r) { return r.docId === docId; });
+  if (n) audit_(u, 'Xóa tài liệu AI', first ? first.title : docId);
+  return { aiDocs: aiDocList_() };
+}
+
+function getAiDoc_(ctx) {
+  requireAdmin_(ctx.user);
+  var docId = str_(ctx.payload.docId, 80);
+  var rows = all_('aiDocs').filter(function (r) { return r.docId === docId; }).sort(function (a, b) { return a.part - b.part; });
+  if (!rows.length) throw fail_('Tài liệu không tồn tại.');
+  return {
+    docId: docId, title: rows[0].title, category: rows[0].category, equipmentId: rows[0].equipmentId, sourceName: rows[0].sourceName,
+    content: rows.map(function (r) { return r.content; }).join('\n\n'),
+  };
+}
+
+/* ---------- Tìm kiếm tiếng Việt: bỏ dấu, tách từ, chấm điểm theo từ đơn + cặp từ ---------- */
+var VI_STOP = ('va cua la cho cac nhung mot co khong duoc trong voi de thi nay khi nhu the nao gi toi ban hay hoac neu vi tai tu ' +
+  'den ra vao len xuong bi boi cung da dang se rat nhieu it hon nhat phai can nen lam sao bao ai day do kia ay a o u nhe nhi ' +
+  'cho biet giup minh em anh chi thay co ve the nao lam sao cach muon hoi').split(' ');
+
+function normVi_(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function queryTerms_(q) {
+  var words = normVi_(q).split(' ').filter(function (w) { return w.length >= 2 || /\d/.test(w); });
+  var terms = {};
+  words.forEach(function (w, i) {
+    if (VI_STOP.indexOf(w) < 0) terms[w] = 1;
+    if (i + 1 < words.length) {
+      var bi = w + ' ' + words[i + 1];
+      if (VI_STOP.indexOf(w) < 0 || VI_STOP.indexOf(words[i + 1]) < 0) terms[bi] = 2.2; // "hieu chuan", "an toan"...
+    }
+  });
+  return Object.keys(terms).map(function (t) { return { t: t, w: terms[t] }; });
+}
+
+function countOcc_(hay, needle) {
+  var n = 0, i = 0;
+  var pat = ' ' + needle + ' ';
+  while ((i = hay.indexOf(pat, i)) >= 0) { n++; i += needle.length + 1; if (n >= 8) break; }
+  return n;
+}
+
+/** Tìm các đoạn tài liệu liên quan nhất. */
+function searchAiDocs_(question, equipmentIds, maxChars) {
+  var rows = all_('aiDocs');
+  if (!rows.length) return [];
+  var terms = queryTerms_(question);
+  if (!terms.length) return [];
+  var docs = rows.map(function (r) {
+    return { r: r, body: ' ' + normVi_(r.content) + ' ', head: ' ' + normVi_(r.title + ' ' + (r.category || '')) + ' ' };
+  });
+  // độ hiếm của từng từ (IDF)
+  var N = docs.length;
+  terms.forEach(function (q) {
+    var df = 0;
+    docs.forEach(function (d) { if (d.body.indexOf(' ' + q.t + ' ') >= 0 || d.head.indexOf(' ' + q.t + ' ') >= 0) df++; });
+    q.idf = df ? Math.log(1 + (N - df + 0.5) / (df + 0.5)) : 0;
+  });
+  var totalW = terms.reduce(function (sum, q) { return sum + (q.idf ? q.w : 0); }, 0) || 1;
+  var scored = docs.map(function (d) {
+    var score = 0, matchedW = 0;
+    terms.forEach(function (q) {
+      if (!q.idf) return;
+      var tf = countOcc_(d.body, q.t);
+      var th = countOcc_(d.head, q.t) ? 1 : 0;
+      if (tf || th) matchedW += q.w;
+      score += q.w * q.idf * ((tf ? (tf * 2.2) / (tf + 1.2) : 0) + th * 0.6);
+    });
+    // Ưu tiên đoạn khớp được NHIỀU ý của câu hỏi, không chỉ một cụm chung chung ("xử lý", "hướng dẫn"...)
+    var coverage = matchedW / totalW;
+    if (coverage < 0.15) return { r: d.r, score: 0 };
+    score *= Math.pow(coverage, 1.5);
+    if (d.r.equipmentId && equipmentIds.indexOf(d.r.equipmentId) >= 0) score *= 1.6;
+    return { r: d.r, score: score };
+  }).filter(function (x) { return x.score > 0; }).sort(function (a, b) { return b.score - a.score; });
+
+  var out = [], used = 0;
+  for (var i = 0; i < scored.length && out.length < 6; i++) {
+    if (scored[i].score < scored[0].score * 0.25) break; // bỏ đoạn kém liên quan
+    var c = String(scored[i].r.content);
+    if (used + c.length > maxChars && out.length) break;
+    out.push(scored[i].r);
+    used += c.length;
+  }
+  return out;
+}
+
+/** Nhận ra thiết bị được hỏi tới: theo thiết bị đang mở, mã máy, hoặc tên máy trong câu hỏi. */
+function detectEquipment_(question, equipmentId) {
+  var list = all_('equipment');
+  var found = [];
+  if (equipmentId) {
+    var e0 = find_('equipment', equipmentId);
+    if (e0) found.push(e0);
+  }
+  var q = ' ' + normVi_(question) + ' ';
+  var scored = list.map(function (e) {
+    if (found.indexOf(e) >= 0) return { e: e, s: 0 };
+    var code = normVi_(e.code);
+    var s = code && q.indexOf(' ' + code + ' ') >= 0 ? 10 : 0;
+    var codeTail = code.split(' ').slice(1).join(' '); // "lab uv 01" → "uv 01"
+    if (!s && codeTail && q.indexOf(' ' + codeTail + ' ') >= 0) s = 6;
+    queryTerms_(e.name + ' ' + (e.model || '')).forEach(function (t) {
+      if (t.t.length >= 3 && q.indexOf(' ' + t.t + ' ') >= 0) s += t.w;
+    });
+    return { e: e, s: s };
+  }).filter(function (x) { return x.s >= 3; }).sort(function (a, b) { return b.s - a.s; });
+  scored.slice(0, 2 - found.length).forEach(function (x) { found.push(x.e); });
+  return found.slice(0, 2);
+}
+
+function equipmentBrief_(e) {
+  var lines = ['Thiết bị [' + e.code + '] ' + e.name + ' — ' + e.room + ' (' + e.building + '), trạng thái: ' +
+    ({ available: 'Sẵn sàng', in_use: 'Đang sử dụng', maintenance: 'Bảo trì' }[e.status] || e.status) +
+    (e.responsibleStaff ? ', phụ trách: ' + e.responsibleStaff : '') + (e.emergencyContact ? ', liên hệ khẩn: ' + e.emergencyContact : '')];
+  if (e.manufacturer || e.model) lines.push('Hãng/Model: ' + [e.manufacturer, e.model].filter(String).join(' ') + '. ' + (e.specs || ''));
+  if (e.maxBookingHoursPerSession) lines.push('Tối đa ' + e.maxBookingHoursPerSession + ' giờ/phiên. Lịch bảo trì: ' + (e.maintenanceSchedule || '---') +
+    (e.lastMaintenanceDate ? '; bảo trì gần nhất ' + e.lastMaintenanceDate : '') + '.');
+  if (e.safetyGuidelines) lines.push('An toàn: ' + e.safetyGuidelines);
+  if (Array.isArray(e.sopSteps) && e.sopSteps.length) {
+    lines.push('SOP ' + (e.sopDocCode ? '(' + e.sopDocCode + ') ' : '') + (e.sopTitle || '') + ':');
+    e.sopSteps.forEach(function (st) {
+      lines.push('  ' + st.step + '. ' + st.title + ': ' + st.description + (st.warning ? ' ⚠ ' + st.warning : '') + (st.durationEstimate ? ' (' + st.durationEstimate + ')' : ''));
+    });
+  }
+  if (Array.isArray(e.quickChecklist) && e.quickChecklist.length) lines.push('Checklist nhanh: ' + e.quickChecklist.join('; '));
+  var notes = all_('quickNotes').filter(function (n) { return n.equipmentId === e.id; })
+    .sort(function (a, b) { return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || String(b.createdAt).localeCompare(String(a.createdAt)); })
+    .slice(0, 6);
+  if (notes.length) {
+    lines.push('Quick Notes của người dùng:');
+    notes.forEach(function (n) {
+      var params = (n.parameters || []).map(function (x) { return x.key + '=' + x.value; }).join(', ');
+      lines.push('  - ' + n.title + ' (' + n.authorName + '): ' + String(n.content).slice(0, 500) + (params ? ' [' + params + ']' : ''));
+    });
+  }
+  var today = now_().date;
+  var todays = all_('bookings').filter(function (b) { return b.equipmentId === e.id && b.date === today && (b.status === 'confirmed' || b.status === 'active'); })
+    .sort(function (a, b) { return a.startTime.localeCompare(b.startTime); });
+  lines.push('Lịch hôm nay (' + today + '): ' + (todays.length ? todays.map(function (b) { return b.startTime + '-' + b.endTime + (b.status === 'active' ? ' (đang dùng)' : ''); }).join(', ') : 'chưa có ai đặt') + '.');
+  return lines.join('\n');
+}
+
+/** Gọi bởi Worker trước khi hỏi AI (dùng token của người hỏi). Chỉ đọc. */
+function aiContext_(ctx) {
+  var p = ctx.payload || {};
+  var question = str_(p.question, 4000);
+  var maxChars = Math.max(2000, Math.min(Number(p.maxChars) || 7000, 30000));
+  var eqs = detectEquipment_(question + ' ' + str_(p.recent, 2000), str_(p.equipmentId, 80));
+  var eqIds = eqs.map(function (e) { return e.id; });
+  var equipmentText = eqs.map(equipmentBrief_).join('\n\n').slice(0, Math.round(maxChars * 0.6));
+  var chunks = searchAiDocs_(question, eqIds, maxChars);
+  var eqById = {};
+  all_('equipment').forEach(function (e) { eqById[e.id] = e; });
+  return {
+    equipment: equipmentText,
+    equipmentCodes: eqs.map(function (e) { return e.code; }),
+    docs: chunks.map(function (r, i) {
+      var eq = r.equipmentId ? eqById[r.equipmentId] : null;
+      return { n: i + 1, docId: r.docId, title: r.title, category: r.category, part: r.part, parts: r.parts,
+        equipmentCode: eq ? eq.code : undefined, content: r.content };
+    }),
+  };
+}
+
+/* ============================================================================
+ * 15. CÀI ĐẶT — chạy hàm `caiDat` một lần từ trình soạn thảo Apps Script.
  * ========================================================================== */
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('LabLog Pro')

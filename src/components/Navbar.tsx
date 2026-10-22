@@ -12,6 +12,7 @@ import {
   Microscope,
   RotateCcw,
   KeyRound,
+  BookMarked,
   DatabaseZap,
   Plus,
   LogOut,
@@ -26,7 +27,7 @@ import {
 } from 'lucide-react';
 import { LabLogProLogo, AcademicHeaderBadges } from './LabLogos';
 
-export type ActiveTab = 'dashboard' | 'calendar' | 'logbook' | 'equipment' | 'projects' | 'users' | 'analytics';
+export type ActiveTab = 'dashboard' | 'calendar' | 'logbook' | 'equipment' | 'projects' | 'users' | 'analytics' | 'aidocs';
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -85,6 +86,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'projects', label: 'Dự Án Nghiên Cứu', icon: <FolderGit2 className="w-4 h-4" /> },
     { id: 'users', label: 'Quản Lý Người Dùng', icon: <Users className="w-4 h-4" /> },
     { id: 'analytics', label: 'Thống Kê & Báo Cáo', icon: <BarChart3 className="w-4 h-4" /> },
+    { id: 'aidocs', label: 'Tài Liệu AI', icon: <BookMarked className="w-4 h-4" />, adminOnly: true },
   ];
 
   const getRoleBadge = (role: User['role']) => {
@@ -276,7 +278,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Hàng tab điều hướng (cuộn ngang trên màn hình hẹp) */}
         <nav className="flex items-center gap-1 overflow-x-auto py-1.5 border-t border-slate-100 scrollbar-none -mx-1 px-1">
-          {navLinks.map((tab) => {
+          {navLinks.filter((tab) => !tab.adminOnly || currentUser.role === 'admin').map((tab) => {
             const isActive = activeTab === tab.id;
             const isLogbook = tab.id === 'logbook';
             const showCheckoutAlert = isLogbook && checkoutAlertCount > 0;

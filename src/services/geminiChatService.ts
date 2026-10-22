@@ -1,4 +1,4 @@
-import { ChatMessage, GroundingSource, Equipment, Booking, User } from '../types';
+import { ChatMessage, GroundingSource, Equipment, Booking, User, AiDocSource } from '../types';
 import { getToken } from './api';
 
 export interface SendMessageOptions {
@@ -8,6 +8,8 @@ export interface SendMessageOptions {
   equipmentList?: Equipment[];
   bookings?: Booking[];
   currentUser?: User | null;
+  /** Thiết bị đang được hỏi (khi mở Trợ lý từ thẻ thiết bị) */
+  equipmentId?: string;
 }
 
 export interface ChatApiResponse {
@@ -16,6 +18,8 @@ export interface ChatApiResponse {
     searchQueries?: string[];
     sources?: GroundingSource[];
   };
+  docSources?: AiDocSource[];
+  note?: string;
   error?: string;
   code?: string;
 }
@@ -26,7 +30,7 @@ export const GeminiChatService = {
    * with real-time Google Search grounding enabled.
    */
   async sendMessage(options: SendMessageOptions): Promise<ChatApiResponse> {
-    const { message, history, enableSearch, equipmentList, bookings, currentUser } = options;
+    const { message, history, enableSearch, equipmentList, bookings, currentUser, equipmentId } = options;
 
     // Filter and sanitize past messages for API payload
     const formattedHistory = history
@@ -67,6 +71,7 @@ export const GeminiChatService = {
           message,
           history: formattedHistory,
           enableSearch,
+          equipmentId,
           labContext,
         }),
       });
@@ -82,6 +87,8 @@ export const GeminiChatService = {
     return {
       reply: data.reply,
       grounding: data.grounding,
+      docSources: Array.isArray(data.docSources) ? data.docSources : undefined,
+      note: data.note,
     };
   },
 };

@@ -10,7 +10,7 @@ Trình duyệt ──► Cloudflare Worker (worker/index.js)
                   ▼
            Google Apps Script (apps-script/Code.gs)  ── kiểm tra quyền, nghiệp vụ, gửi email
                   ▼
-           Google Sheets (9 sheet dữ liệu + 1 sheet lịch sử thao tác)
+           Google Sheets (10 sheet dữ liệu + 1 sheet lịch sử thao tác)
 ```
 
 Trình duyệt không biết địa chỉ Apps Script, không giữ khóa bí mật nào. Mọi kiểm tra (trùng lịch, quyền Admin, ai được trả máy…) đều làm ở Apps Script.
@@ -140,6 +140,17 @@ Từ đây, mỗi lần `git push` lên `main`, Cloudflare tự build và triể
 | Tra cứu Google | Không (trả lời từ kiến thức chung + dữ liệu phòng Lab) | Có, kèm nguồn |
 | Dữ liệu câu hỏi | Cloudflare không dùng để huấn luyện | Gói miễn phí: Google có thể dùng để cải thiện sản phẩm |
 
+### Tài liệu cho Trợ lý (Admin)
+
+Mục **Tài Liệu AI** (chỉ Admin thấy) để đưa nội quy, quy trình, hướng dẫn an toàn… cho Trợ lý:
+
+- **Thêm tài liệu:** tải lên **PDF, Word (.docx), .txt/.md** hoặc dán nội dung. Chữ được lấy ra ngay trên máy để bạn xem lại trước khi lưu. PDF dạng ảnh scan không lấy được chữ — dùng bản PDF gốc hoặc file Word. Tối đa 400.000 ký tự/tài liệu (~150 trang).
+- **Gắn với thiết bị** (tùy chọn) để tài liệu được ưu tiên khi hỏi về máy đó.
+- Tài liệu lưu ở sheet **`TaiLieuAI`**, tự chia thành đoạn ~1.400 ký tự. Mỗi câu hỏi, máy chủ tìm các đoạn liên quan nhất (gõ có dấu hay không dấu đều được) và gửi kèm cho Trợ lý; Trợ lý trả lời theo tài liệu, ghi số trích dẫn [1], [2] và liệt kê tên tài liệu dưới câu trả lời.
+- Ngoài tài liệu, Trợ lý **tự đọc SOP, hướng dẫn an toàn, checklist, Quick Notes và lịch hôm nay** của thiết bị được hỏi (theo mã máy, tên máy, hoặc khi mở Trợ lý từ thẻ thiết bị).
+- Ô **"Kiểm tra: Trợ lý sẽ đọc gì khi được hỏi?"** giúp xem trước đoạn nào được chọn cho một câu hỏi.
+- Sửa nội dung trực tiếp trên sheet `TaiLieuAI` cũng được, nhưng nên sửa trong ứng dụng để đoạn được chia lại đúng.
+
 Khi đã thêm `GEMINI_API_KEY`, hệ thống dùng Gemini; nếu Gemini hết hạn mức sẽ **tự chuyển** sang Workers AI. Hết lượt miễn phí trong ngày, người dùng thấy thông báo "đã dùng hết lượt, mở lại lúc 7 giờ sáng". Model miễn phí đổi được bằng biến `AI_MODEL`, ví dụ `@cf/qwen/qwen3-30b-a3b-fp8` (rẻ hơn, ~230 câu/ngày) hoặc `@cf/aisingapore/gemma-sea-lion-v4-27b-it` (chuyên ngôn ngữ Đông Nam Á, ~100 câu/ngày). Theo dõi lượt dùng ở Cloudflare → **AI → Workers AI**.
 
 ## Tốc độ tải dữ liệu
@@ -181,6 +192,7 @@ Lần đăng nhập đầu tiên trong ngày có thể chậm hơn 1–3 giây v
 | `BaoTri` | Phiếu bảo trì / hiệu chuẩn |
 | `DeTai` | Đề tài / dự án nghiên cứu |
 | `VatTu` | Danh mục vật tư tiêu hao và tồn kho |
+| `TaiLieuAI` | Tài liệu cho Trợ lý AI (mỗi dòng một đoạn) |
 | `LichSuThaoTac` | Nhật ký thao tác hệ thống |
 
 Có thể sửa trực tiếp trên Sheet (đổi tên phòng, thêm vật tư, chỉnh tồn kho…). Cột được nhận theo **tên ở dòng 1**, nên được phép đổi thứ tự cột hoặc thêm cột ghi chú riêng. **Không đổi tên cột** và không xóa cột `id`. Màn hình người dùng tự cập nhật trong vòng 1 phút.

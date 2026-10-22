@@ -310,5 +310,38 @@ export interface ChatMessage {
     sources?: GroundingSource[];
   };
   isError?: boolean;
+  /** Tài liệu nội bộ Trợ lý đã dùng để trả lời */
+  docSources?: AiDocSource[];
+  note?: string;
+}
+
+export const AI_DOC_CATEGORIES = [
+  'Nội quy & quy định',
+  'SOP / Hướng dẫn vận hành',
+  'An toàn hóa chất',
+  'Xử lý sự cố',
+  'Bảo trì & hiệu chuẩn',
+  'Khác',
+] as const;
+
+export interface AiDocMeta {
+  docId: string;
+  title: string;
+  category: string;
+  equipmentId?: string;
+  sourceName?: string;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  parts: number;
+  chars: number;
+}
+
+export interface AiDocSource {
+  n: number;
+  title: string;
+  part: number;
+  parts: number;
+  equipmentCode?: string;
 }
 
