@@ -812,7 +812,7 @@ export default function App() {
                 className="text-indigo-700 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Trợ lý AI Gemini</span>
+                <span>Trợ lý AI</span>
               </button>
               <span>·</span>
               <button

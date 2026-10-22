@@ -1631,6 +1631,7 @@ function onOpen() {
     .addItem('Cài đặt / kiểm tra cấu trúc sheet', 'caiDat')
     .addItem('Gửi email nhắc lịch ngay', 'guiNhacLich')
     .addItem('Xóa bộ nhớ đệm (sau khi sửa tay mà chưa thấy cập nhật)', 'xoaBoNhoDem')
+    .addItem('Đặt lại mật khẩu Admin', 'datLaiMatKhauAdmin')
     .addItem('Tạo PROXY_KEY mới', 'taoProxyKeyMoi')
     .addToUi();
 }
@@ -1697,6 +1698,41 @@ function prepareSheet_(sh, cols) {
   sh.getRange(1, 1, 1, total).setFontWeight('bold').setBackground('#e2e8f0');
   sh.setFrozenRows(1);
   sh.getRange(1, 1, sh.getMaxRows(), total).setNumberFormat('@');
+}
+
+/**
+ * Quên mật khẩu Admin / mất nhật ký lần cài đặt: chạy hàm này trong trình soạn thảo Apps Script.
+ * Đặt mật khẩu mới cho email của chủ script (hoặc thuộc tính ADMIN_EMAIL), bảo đảm tài khoản là Admin
+ * đang hoạt động, gỡ khóa đăng nhập sai. Mật khẩu mới hiện trong "Nhật ký thực thi".
+ */
+function datLaiMatKhauAdmin() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  resetRequest_();
+  FRESH = true;
+  try {
+    var email = String(prop_('ADMIN_EMAIL', '') || Session.getEffectiveUser().getEmail() || '').trim().toLowerCase();
+    if (!email) throw new Error('Không lấy được email. Thêm thuộc tính ADMIN_EMAIL rồi chạy lại.');
+    var u = findUserByEmail_(email) || {
+      id: newId_('user'), email: email, name: 'Quản trị viên', title: 'Quản lý phòng Lab', department: prop_('LAB_NAME', 'Phòng Thí nghiệm'),
+      phone: '---', avatarBg: 'bg-indigo-600', createdAt: now_().iso,
+    };
+    var pw = randomPassword_();
+    u.role = 'admin';
+    u.status = 'active';
+    setPassword_(u, pw);
+    upsert_('users', u);
+    CacheService.getScriptCache().remove('lf:' + email);
+    audit_({ email: email }, 'Đặt lại mật khẩu Admin từ Apps Script', '');
+    commitWrites_();
+    flushAudit_();
+    SpreadsheetApp.flush();
+    var msg = 'Tài khoản Admin: ' + email + '  ·  Mật khẩu mới: ' + pw + '  (đổi ngay sau khi đăng nhập)';
+    Logger.log(msg);
+    return msg;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function taoProxyKeyMoi() {

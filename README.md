@@ -6,7 +6,7 @@ Hệ thống đặt lịch thiết bị, nhận/trả máy (check-in/check-out),
 Trình duyệt ──► Cloudflare Worker (worker/index.js)
                   │  /            → giao diện React (thư mục dist/, build tự động)
                   │  POST /api    → chuyển tiếp, gắn PROXY_KEY bí mật + IP người dùng
-                  │  POST /api/chat → Trợ lý AI Gemini (tùy chọn)
+                  │  POST /api/chat → Trợ lý AI (Cloudflare Workers AI miễn phí, hoặc Gemini)
                   ▼
            Google Apps Script (apps-script/Code.gs)  ── kiểm tra quyền, nghiệp vụ, gửi email
                   ▼
@@ -96,8 +96,11 @@ Hoặc trên trang repo: **Add file → Upload files**, kéo thả toàn bộ n�
    |---|---|---|
    | `APPS_SCRIPT_URL` | **Secret** | URL `/exec` ở Bước 1.7 |
    | `PROXY_KEY` | **Secret** | Giá trị `PROXY_KEY` ở Bước 1.6 |
-   | `GEMINI_API_KEY` | **Secret** *(tùy chọn)* | Khóa từ https://aistudio.google.com/apikey — bật Trợ lý AI |
+   | `AI_MODEL` | Text *(tùy chọn)* | Đổi model Trợ lý AI miễn phí, mặc định `@cf/google/gemma-4-26b-a4b-it` |
+   | `GEMINI_API_KEY` | **Secret** *(tùy chọn)* | Dùng Gemini (có tra cứu Google) thay cho Trợ lý miễn phí |
    | `GEMINI_MODEL` | Text *(tùy chọn)* | Mặc định `gemini-3.8-flash` |
+
+   Trợ lý AI **tự bật, miễn phí, không cần khóa** nhờ mục `[ai]` trong `wrangler.toml`.
 
 4. Vào **Deployments** → chạy lại bản mới nhất (hoặc push một commit) để biến có hiệu lực.
 5. Kiểm tra: mở `https://<ten-worker>.<tai-khoan>.workers.dev/api/health`. Kết quả đúng:
@@ -121,6 +124,23 @@ Từ đây, mỗi lần `git push` lên `main`, Cloudflare tự build và triể
 5. In mã QR dán lên từng máy (mục Danh Mục Thiết Bị → QR). Quét bằng điện thoại sẽ mở thẳng thẻ thiết bị để nhận máy, xem SOP.
 
 ---
+
+### Không đăng nhập được Admin ("Email hoặc mật khẩu không đúng")
+
+- Mật khẩu Admin là chuỗi **10 ký tự ngẫu nhiên** hiện trong *Nhật ký thực thi* lần chạy `caiDat` — không phải `123456`.
+- Email Admin là **email Google đã chạy `caiDat`** (xem sheet `NguoiDung`, dòng có `role` = `admin`).
+- Mất mật khẩu: trong Apps Script chọn hàm **`datLaiMatKhauAdmin`** → **Chạy** → mở *Nhật ký thực thi* lấy mật khẩu mới. Hàm này cũng gỡ khóa nếu đã gõ sai 5 lần. Không cần triển khai lại Web app.
+
+## Trợ lý AI
+
+| | Cloudflare Workers AI *(mặc định)* | Google Gemini *(tùy chọn)* |
+|---|---|---|
+| Cài đặt | Không cần gì — có sẵn trong `wrangler.toml` | Thêm Secret `GEMINI_API_KEY` |
+| Chi phí | Miễn phí 10.000 neuron/ngày ≈ **150–200 câu hỏi/ngày**, đặt lại 7h sáng | Gói miễn phí có giới hạn theo phút/ngày |
+| Tra cứu Google | Không (trả lời từ kiến thức chung + dữ liệu phòng Lab) | Có, kèm nguồn |
+| Dữ liệu câu hỏi | Cloudflare không dùng để huấn luyện | Gói miễn phí: Google có thể dùng để cải thiện sản phẩm |
+
+Khi đã thêm `GEMINI_API_KEY`, hệ thống dùng Gemini; nếu Gemini hết hạn mức sẽ **tự chuyển** sang Workers AI. Hết lượt miễn phí trong ngày, người dùng thấy thông báo "đã dùng hết lượt, mở lại lúc 7 giờ sáng". Model miễn phí đổi được bằng biến `AI_MODEL`, ví dụ `@cf/qwen/qwen3-30b-a3b-fp8` (rẻ hơn, ~230 câu/ngày) hoặc `@cf/aisingapore/gemma-sea-lion-v4-27b-it` (chuyên ngôn ngữ Đông Nam Á, ~100 câu/ngày). Theo dõi lượt dùng ở Cloudflare → **AI → Workers AI**.
 
 ## Tốc độ tải dữ liệu
 
@@ -174,6 +194,7 @@ Có thể sửa trực tiếp trên Sheet (đổi tên phòng, thêm vật tư, 
 ```bash
 npm install
 cp .dev.vars.example .dev.vars     # điền APPS_SCRIPT_URL và PROXY_KEY thật
+npx wrangler login                 # một lần — Trợ lý AI miễn phí chạy trên máy chủ Cloudflare
 npm run dev:worker                 # build giao diện + chạy Worker ở http://localhost:8787
 ```
 
@@ -193,7 +214,7 @@ Kiểm tra kiểu TypeScript: `npm run lint`.
 - Dữ liệu từ `localStorage` của từng trình duyệt → **Google Sheets dùng chung**, nhiều người cùng thấy một lịch.
 - Bỏ đăng nhập 1 chạm bằng tài khoản mẫu, bỏ "chuyển tài khoản kiểm thử", bỏ mật khẩu mặc định `123456`. Thêm đổi mật khẩu, quên mật khẩu qua email, Admin duyệt tài khoản tự đăng ký.
 - Email thật (xác nhận lịch, nhắc lịch, báo sự cố, cấp tài khoản) thay cho hộp thư mô phỏng.
-- Server Express → Cloudflare Worker. Khóa Gemini chỉ nằm ở Worker; Trợ lý AI yêu cầu đăng nhập, giới hạn 30 câu/10 phút/người, và báo lỗi rõ ràng thay vì trả lời soạn sẵn khi chưa cấu hình.
+- Server Express → Cloudflare Worker. Trợ lý AI chạy miễn phí bằng Cloudflare Workers AI (Gemini là tùy chọn), yêu cầu đăng nhập, giới hạn 30 câu/10 phút/người, và báo lỗi rõ ràng thay vì trả lời soạn sẵn.
 - Sửa ngày "hôm nay" bị lệch (trước 7 giờ sáng hiển thị ngày hôm qua do tính theo giờ UTC).
 - Sửa thanh điều hướng và các thanh lọc bị tràn ngang trên màn hình laptop 1280–1440px và điện thoại.
 - Quét QR khi chưa đăng nhập: sau khi đăng nhập tự mở đúng thẻ thiết bị.

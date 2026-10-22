@@ -127,13 +127,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={onOpenGeminiChat}
                 className="px-2.5 py-1.5 rounded-lg border border-indigo-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 hover:from-blue-100 hover:to-indigo-100 text-indigo-900 transition-all flex items-center gap-1.5 text-xs font-semibold shadow-xs"
-                title="Mở Trợ lý AI Gemini với tìm kiếm Google thời gian thực"
+                title="Mở Trợ lý AI phòng Lab"
               >
                 <Sparkles className="w-3.5 h-3.5 text-indigo-600 fill-indigo-200" />
                 <span className="hidden md:inline">Trợ Lý AI</span>
-                <span className="hidden xl:inline text-[10px] bg-indigo-200/80 text-indigo-800 font-bold px-1.5 py-0.2 rounded">
-                  Google Search
-                </span>
               </button>
             )}
             {/* QR Scanner button */}

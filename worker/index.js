@@ -9,7 +9,10 @@
  * Biến môi trường (Cloudflare → Worker → Settings → Variables and Secrets):
  *   APPS_SCRIPT_URL  (Secret) URL Web app Apps Script, kết thúc bằng /exec
  *   PROXY_KEY        (Secret) trùng với thuộc tính PROXY_KEY trong Apps Script
- *   GEMINI_API_KEY   (Secret, tùy chọn) bật Trợ lý AI
+ *   AI (binding)     Cloudflare Workers AI — Trợ lý AI MIỄN PHÍ (~10.000 neuron/ngày), khai báo sẵn trong wrangler.toml
+ *   AI_MODEL         (Text, tùy chọn) model Workers AI, mặc định @cf/google/gemma-4-26b-a4b-it
+ *   GEMINI_API_KEY   (Secret, tùy chọn) dùng Gemini (có tra cứu Google) thay cho Workers AI;
+ *                    khi Gemini hết hạn mức, tự chuyển sang Workers AI
  *   GEMINI_MODEL     (Text, tùy chọn) mặc định gemini-3.8-flash
  */
 
@@ -23,6 +26,7 @@ export default {
     try {
       if (url.pathname === '/api' || url.pathname === '/api/') return await handleApi(request, env);
       if (url.pathname === '/api/chat') return await handleChat(request, env);
+      if (url.pathname === '/api/chat-info') return json(chatInfo(env));
       if (url.pathname === '/api/health') return await handleHealth(env);
       if (url.pathname.startsWith('/api/')) return json({ ok: false, error: 'Không tìm thấy.' }, 404);
       return env.ASSETS.fetch(request);
@@ -130,6 +134,8 @@ async function handleHealth(env) {
       appsScript: r.ok === true,
       keyMatches: r.code !== 'BAD_KEY',
       gemini: Boolean(env.GEMINI_API_KEY),
+      workersAI: Boolean(env.AI),
+      assistant: chatInfo(env),
       ms: Date.now() - started,
       error: r.ok ? undefined : r.error,
     }, r.ok ? 200 : 502);
@@ -182,11 +188,35 @@ async function rateLimited(userId) {
   return false;
 }
 
+const DEFAULT_WORKERS_AI_MODEL = '@cf/google/gemma-4-26b-a4b-it';
+const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
+
+/** Trợ lý đang dùng: Gemini nếu có khóa, nếu không thì Workers AI (miễn phí). */
+function chatInfo(env) {
+  if (env.GEMINI_API_KEY) {
+    return { enabled: true, provider: 'gemini', model: env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL, label: 'Google Gemini', search: true, fallback: Boolean(env.AI) };
+  }
+  if (env.AI) {
+    const model = env.AI_MODEL || DEFAULT_WORKERS_AI_MODEL;
+    return { enabled: true, provider: 'workers-ai', model, label: modelLabel(model), search: false, fallback: false };
+  }
+  return { enabled: false, provider: null, model: null, label: 'Chưa bật', search: false, fallback: false };
+}
+
+function modelLabel(model) {
+  const name = String(model).split('/').pop() || model;
+  if (/gemma-4/i.test(name)) return 'Gemma 4 (Cloudflare AI)';
+  if (/qwen3/i.test(name)) return 'Qwen3 (Cloudflare AI)';
+  if (/sea-lion/i.test(name)) return 'SEA-LION (Cloudflare AI)';
+  if (/llama/i.test(name)) return 'Llama (Cloudflare AI)';
+  return name + ' (Cloudflare AI)';
+}
+
 const SYSTEM_PROMPT = `Bạn là Trợ lý AI của hệ thống quản trị và nhật ký thiết bị phòng thí nghiệm LabLog Pro.
 
 Nhiệm vụ:
 1. Hỗ trợ khoa học & vận hành: quy trình thao tác chuẩn (SOP), an toàn hóa chất/thiết bị, xử lý sự cố, chuẩn bị mẫu cho các thiết bị như FE-SEM, GC-MS/MS, TGA/DSC, UV-Vis, HPLC...
-2. Khi có công cụ Google Search, dùng nó cho câu hỏi về tiêu chuẩn ISO/ASTM/TCVN, thông số kỹ thuật, tài liệu mới và nêu rõ nguồn.
+2. {{SEARCH_RULE}}
 3. Tham chiếu dữ liệu phòng thí nghiệm trong ngữ cảnh (danh mục thiết bị, trạng thái) để trả lời sát thực tế. Không bịa thông tin không có trong ngữ cảnh.
 4. Trả lời bằng tiếng Việt, văn phong khoa học, súc tích, định dạng Markdown rõ ràng; có cảnh báo an toàn khi phù hợp.`;
 
@@ -199,48 +229,106 @@ async function handleChat(request, env) {
   if (error) return error;
   const session = await verifyToken(data.token, env.PROXY_KEY);
   if (!session) return json({ error: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', code: 'AUTH' }, 401);
-  if (!env.GEMINI_API_KEY) {
-    return json({ error: 'Trợ lý AI chưa được bật: Quản trị viên cần thêm GEMINI_API_KEY trong cài đặt Cloudflare Worker.', code: 'API_KEY_MISSING' }, 503);
+  const info = chatInfo(env);
+  if (!info.enabled) {
+    return json({ error: 'Trợ lý AI chưa được bật: kiểm tra mục [ai] trong wrangler.toml hoặc thêm GEMINI_API_KEY trên Cloudflare.', code: 'API_KEY_MISSING' }, 503);
   }
   if (await rateLimited(session.u)) return json({ error: 'Bạn đã hỏi quá nhiều trong 10 phút. Vui lòng thử lại sau.', code: 'RATE_LIMIT' }, 429);
 
   const message = typeof data.message === 'string' ? data.message.trim().slice(0, 4000) : '';
   if (!message) return json({ error: 'Nội dung câu hỏi không được để trống.' }, 400);
 
-  const contents = [];
+  const history = [];
   if (Array.isArray(data.history)) {
     for (const item of data.history.slice(-10)) {
       const text = typeof item?.text === 'string' ? item.text : typeof item?.content === 'string' ? item.content : '';
-      if (text) contents.push({ role: item.role === 'user' ? 'user' : 'model', parts: [{ text: text.slice(0, 8000) }] });
+      if (text) history.push({ role: item.role === 'user' ? 'user' : 'model', text });
     }
   }
-  contents.push({ role: 'user', parts: [{ text: message }] });
+  // Câu hỏi hiện tại đã nằm cuối lịch sử thì bỏ đi để không gửi trùng
+  if (history.length && history[history.length - 1].role === 'user' && history[history.length - 1].text.trim() === message) history.pop();
 
-  let system = SYSTEM_PROMPT;
-  if (data.labContext) system += `\n\n[DỮ LIỆU NGỮ CẢNH PHÒNG THÍ NGHIỆM]:\n${JSON.stringify(data.labContext).slice(0, 60000)}`;
-
-  const body = { contents, systemInstruction: { parts: [{ text: system }] } };
-  if (data.enableSearch !== false) body.tools = [{ google_search: {} }];
-
-  const model = env.GEMINI_MODEL || 'gemini-3.8-flash';
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-    body: JSON.stringify(body),
-  });
-  const out = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = out?.error?.message || `Gemini trả lỗi HTTP ${res.status}`;
-    const quota = res.status === 429 || out?.error?.status === 'RESOURCE_EXHAUSTED';
-    return json({
-      error: quota ? 'Hạn mức Gemini API tạm thời đã hết. Vui lòng thử lại sau ít phút.' : msg,
-      code: out?.error?.status || 'GEMINI_API_ERROR',
-    }, quota ? 429 : 502);
+  if (info.provider === 'gemini') {
+    const g = await askGemini(env, data, history, message);
+    if (g.ok) return json({ ...g.result, provider: 'gemini', model: info.model });
+    // Gemini hết hạn mức / lỗi máy chủ → dùng Workers AI miễn phí nếu có
+    if (env.AI && (g.status === 429 || g.status >= 500)) {
+      const w = await askWorkersAI(env, data, history, message);
+      if (w.ok) return json({ ...w.result, provider: 'workers-ai', model: w.model, note: 'Gemini tạm hết hạn mức, đã trả lời bằng Cloudflare AI (không tra cứu Google).' });
+    }
+    return json({ error: g.error, code: g.code }, g.status === 429 ? 429 : 502);
   }
 
+  const w = await askWorkersAI(env, data, history, message);
+  if (w.ok) return json({ ...w.result, provider: 'workers-ai', model: w.model });
+  return json({ error: w.error, code: w.code }, w.status || 502);
+}
+
+function systemPrompt(data, canSearch, maxContext) {
+  let system = SYSTEM_PROMPT.replace(
+    '{{SEARCH_RULE}}',
+    canSearch
+      ? 'Khi có công cụ Google Search, dùng nó cho câu hỏi về tiêu chuẩn ISO/ASTM/TCVN, thông số kỹ thuật, tài liệu mới và nêu rõ nguồn.'
+      : 'Bạn KHÔNG tra cứu được Internet. Với tiêu chuẩn, số hiệu văn bản, giá cả hay số liệu có thể đã thay đổi, nói rõ đó là kiến thức chung và khuyên người dùng đối chiếu tài liệu gốc/nhà sản xuất. Không bịa nguồn hay đường link.'
+  );
+  if (data.labContext) system += `\n\n[DỮ LIỆU NGỮ CẢNH PHÒNG THÍ NGHIỆM]:\n${JSON.stringify(data.labContext).slice(0, maxContext)}`;
+  return system;
+}
+
+async function askGemini(env, data, history, message) {
+  const contents = history.map((h) => ({ role: h.role, parts: [{ text: h.text.slice(0, 8000) }] }));
+  contents.push({ role: 'user', parts: [{ text: message }] });
+  const body = { contents, systemInstruction: { parts: [{ text: systemPrompt(data, data.enableSearch !== false, 60000) }] } };
+  if (data.enableSearch !== false) body.tools = [{ google_search: {} }];
+
+  const model = env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+  let res;
+  try {
+    res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    return { ok: false, status: 503, code: 'GEMINI_NETWORK', error: 'Không kết nối được Gemini. Vui lòng thử lại.' };
+  }
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const quota = res.status === 429 || out?.error?.status === 'RESOURCE_EXHAUSTED';
+    return {
+      ok: false,
+      status: quota ? 429 : res.status,
+      code: out?.error?.status || 'GEMINI_API_ERROR',
+      error: quota ? 'Hạn mức Gemini API tạm thời đã hết. Vui lòng thử lại sau ít phút.' : out?.error?.message || `Gemini trả lỗi HTTP ${res.status}`,
+    };
+  }
   const cand = out.candidates?.[0];
   const reply = (cand?.content?.parts || []).map((p) => p.text || '').join('').trim() || 'Không có phản hồi từ mô hình.';
   const gm = cand?.groundingMetadata || {};
   const sources = (gm.groundingChunks || []).map((c) => c.web).filter((w) => w && w.uri).map((w) => ({ uri: w.uri, title: w.title || w.uri }));
-  return json({ reply, grounding: { searchQueries: gm.webSearchQueries || [], sources } });
+  return { ok: true, result: { reply, grounding: { searchQueries: gm.webSearchQueries || [], sources } } };
+}
+
+/** Cloudflare Workers AI: chạy ngay trong Worker, không cần khóa, miễn phí ~10.000 neuron/ngày. */
+async function askWorkersAI(env, data, history, message) {
+  const model = env.AI_MODEL || DEFAULT_WORKERS_AI_MODEL;
+  if (!env.AI) return { ok: false, status: 503, code: 'NO_AI', error: 'Chưa bật Cloudflare Workers AI (mục [ai] trong wrangler.toml).', model };
+  // Ngữ cảnh gọn hơn Gemini để tiết kiệm lượt miễn phí
+  const messages = [{ role: 'system', content: systemPrompt(data, false, 12000) }];
+  for (const h of history.slice(-6)) messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: h.text.slice(0, 2500) });
+  messages.push({ role: 'user', content: message });
+  try {
+    const r = await env.AI.run(model, { messages, max_tokens: 1500, temperature: 0.4 });
+    let text = typeof r === 'string' ? r : r?.response ?? r?.choices?.[0]?.message?.content ?? r?.result?.response ?? '';
+    if (typeof text !== 'string') text = JSON.stringify(text);
+    text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    return { ok: true, model, result: { reply: text || 'Không có phản hồi từ mô hình.', grounding: undefined } };
+  } catch (e) {
+    const msg = String(e && e.message ? e.message : e);
+    if (/4006|free allocation|neurons/i.test(msg)) {
+      return { ok: false, status: 429, code: 'AI_DAILY_LIMIT', model, error: 'Đã dùng hết lượt Trợ lý AI miễn phí hôm nay. Hệ thống mở lại lúc 7 giờ sáng.' };
+    }
+    console.error('Workers AI:', msg);
+    return { ok: false, status: 502, code: 'WORKERS_AI_ERROR', model, error: 'Trợ lý AI tạm thời lỗi: ' + msg.slice(0, 200) };
+  }
 }

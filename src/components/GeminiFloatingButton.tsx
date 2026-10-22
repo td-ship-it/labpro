@@ -14,8 +14,8 @@ export const GeminiFloatingButton: React.FC<GeminiFloatingButtonProps> = ({ onCl
       <button
         onClick={onClick}
         className="relative flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-white/40 backdrop-blur-sm cursor-pointer"
-        title="Mở Trợ lý AI Gemini với tìm kiếm Google thời gian thực"
-        aria-label="Trợ lý AI Gemini"
+        title="Mở Trợ lý AI phòng Lab"
+        aria-label="Trợ lý AI"
       >
         {/* Animated pulse halo */}
         <span className="absolute -inset-1 rounded-full bg-blue-500/30 blur-sm animate-pulse pointer-events-none group-hover:bg-blue-400/50" />
@@ -26,12 +26,12 @@ export const GeminiFloatingButton: React.FC<GeminiFloatingButtonProps> = ({ onCl
 
         <div className="relative text-left hidden sm:block">
           <div className="text-xs font-bold tracking-wide flex items-center gap-1.5 text-white leading-tight">
-            <span>Trợ Lý AI Gemini</span>
+            <span>Trợ Lý AI</span>
             <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
           </div>
           <div className="text-[10px] text-cyan-100 font-medium flex items-center gap-1 leading-tight">
             <Globe className="w-2.5 h-2.5 text-emerald-300" />
-            <span>Google Search Data</span>
+            <span>Hỏi đáp SOP & thiết bị</span>
           </div>
         </div>
 
