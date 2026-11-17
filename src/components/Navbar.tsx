@@ -79,24 +79,24 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   const navLinks: { id: ActiveTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
-    { id: 'dashboard', label: 'Tổng Quan', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: 'calendar', label: 'Lịch Đăng Ký', icon: <CalendarDays className="w-4 h-4" /> },
-    { id: 'logbook', label: 'Nhật Ký Sử Dụng', icon: <BookOpenCheck className="w-4 h-4" /> },
-    { id: 'equipment', label: 'Danh Mục Thiết Bị', icon: <FlaskConical className="w-4 h-4" /> },
-    { id: 'projects', label: 'Dự Án Nghiên Cứu', icon: <FolderGit2 className="w-4 h-4" /> },
-    { id: 'users', label: 'Quản Lý Người Dùng', icon: <Users className="w-4 h-4" /> },
-    { id: 'analytics', label: 'Thống Kê & Báo Cáo', icon: <BarChart3 className="w-4 h-4" /> },
-    { id: 'aidocs', label: 'Tài Liệu AI', icon: <BookMarked className="w-4 h-4" />, adminOnly: true },
+    { id: 'dashboard', label: 'Tổng quan', icon: <LayoutDashboard className="w-4 h-4" /> },
+    { id: 'calendar', label: 'Lịch đăng ký', icon: <CalendarDays className="w-4 h-4" /> },
+    { id: 'logbook', label: 'Nhật ký sử dụng', icon: <BookOpenCheck className="w-4 h-4" /> },
+    { id: 'equipment', label: 'Thiết bị', icon: <FlaskConical className="w-4 h-4" /> },
+    { id: 'projects', label: 'Đề tài', icon: <FolderGit2 className="w-4 h-4" /> },
+    { id: 'users', label: 'Người dùng', icon: <Users className="w-4 h-4" /> },
+    { id: 'analytics', label: 'Thống kê & báo cáo', icon: <BarChart3 className="w-4 h-4" /> },
+    { id: 'aidocs', label: 'Tài liệu AI', icon: <BookMarked className="w-4 h-4" />, adminOnly: true },
   ];
 
   const getRoleBadge = (role: User['role']) => {
     switch (role) {
       case 'admin':
-        return { label: 'Admin Quản Trị', icon: <ShieldCheck className="w-3.5 h-3.5" />, color: 'text-indigo-700 bg-indigo-50 border border-indigo-200' };
+        return { label: 'Admin quản trị', icon: <ShieldCheck className="w-3.5 h-3.5" />, color: 'text-indigo-700 bg-indigo-50 border border-indigo-200' };
       case 'instructor':
-        return { label: 'Giảng Viên', icon: <GraduationCap className="w-3.5 h-3.5" />, color: 'text-emerald-700 bg-emerald-50 border border-emerald-200' };
+        return { label: 'Giảng viên', icon: <GraduationCap className="w-3.5 h-3.5" />, color: 'text-emerald-700 bg-emerald-50 border border-emerald-200' };
       case 'researcher':
-        return { label: 'Nghiên Cứu Viên', icon: <Microscope className="w-3.5 h-3.5" />, color: 'text-blue-700 bg-blue-50 border border-blue-200' };
+        return { label: 'Trợ giảng/KTV', icon: <Microscope className="w-3.5 h-3.5" />, color: 'text-blue-700 bg-blue-50 border border-blue-200' };
     }
   };
 
@@ -165,7 +165,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Mail className="w-4 h-4 text-slate-600" />
               {unreadEmailCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center font-mono leading-none shadow-xs">
+                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center font-mono leading-none shadow-xs">
                   {unreadEmailCount}
                 </span>
               )}
@@ -192,11 +192,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="hidden sm:block">
                   <div className="text-xs font-semibold text-slate-800 leading-tight flex items-center gap-1.5">
                     <span className="truncate max-w-[120px]">{currentUser.name}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-sm font-medium ${roleInfo.color}`}>
+                    <span className={`text-xs px-1.5 py-0.5 rounded-sm font-medium ${roleInfo.color}`}>
                       {roleInfo.label}
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-500 truncate max-w-[160px]">
+                  <div className="text-xs text-slate-500 truncate max-w-[160px]">
                     {currentUser.department}
                   </div>
                 </div>
@@ -212,8 +212,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
                     <div className="px-4 py-2 border-b border-slate-100">
                       <p className="text-sm font-bold text-slate-900 truncate">{currentUser.title} {currentUser.name}</p>
-                      <p className="text-[11px] text-slate-500 truncate font-mono">{currentUser.email}</p>
-                      <p className="text-[11px] text-slate-400 truncate">{currentUser.department}</p>
+                      <p className="text-xs text-slate-500 truncate font-mono">{currentUser.email}</p>
+                      <p className="text-xs text-slate-400 truncate">{currentUser.department}</p>
                     </div>
 
                     <div className="py-1">
@@ -277,7 +277,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Hàng tab điều hướng (cuộn ngang trên màn hình hẹp) */}
-        <nav className="flex items-center gap-1 overflow-x-auto py-1.5 border-t border-slate-100 scrollbar-none -mx-1 px-1">
+        <nav className="flex items-center gap-1 overflow-x-auto lg:overflow-visible lg:flex-wrap py-1.5 border-t border-slate-100 scrollbar-none -mx-1 px-1">
           {navLinks.filter((tab) => !tab.adminOnly || currentUser.role === 'admin').map((tab) => {
             const isActive = activeTab === tab.id;
             const isLogbook = tab.id === 'logbook';
@@ -299,7 +299,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {/* Urgent Check-out indicator badge */}
                 {showCheckoutAlert && (
                   <span 
-                    className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs ${
+                    className={`text-xs font-black uppercase px-1.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs ${
                       hasOverdueCheckout
                         ? 'bg-red-600 text-white animate-pulse'
                         : 'bg-amber-500 text-white'
@@ -312,7 +312,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
 
                 {tab.id === 'users' && currentUser.role === 'admin' && (
-                  <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.2 rounded">Admin</span>
+                  <span className="text-xs bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.2 rounded">Admin</span>
                 )}
               </button>
             );

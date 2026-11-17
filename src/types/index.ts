@@ -61,6 +61,7 @@ export interface Equipment {
   specs: string;
   safetyGuidelines: string;
   maxBookingHoursPerSession: number;
+  trainedUserIds?: string[]; // Danh sách người đã được tập huấn sử dụng máy
   maintenanceSchedule?: string;
   responsibleStaff: string;
   // Documentation, SOP, and Video for QR Quick Hub
@@ -174,7 +175,9 @@ export interface ResearchProject {
   status: ProjectStatus;
   colorTag: 'indigo' | 'emerald' | 'amber' | 'rose' | 'sky' | 'purple';
   description: string;
+  leadAgency?: string; // Cơ quan chủ trì
   createdAt?: string;
+  createdBy?: string;
 }
 
 export interface ConsumableSupply {

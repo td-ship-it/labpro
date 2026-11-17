@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, UserRole } from '../types';
 import { LabStorage } from '../services/storage';
+import { DEPARTMENT_OPTIONS } from '../data/departments';
 import { 
   FlaskConical, 
   ShieldCheck, 
@@ -15,18 +16,13 @@ import {
   CheckCircle2, 
   ArrowRight,
   Sparkles,
-  BookOpenCheck,
-  CalendarDays
 } from 'lucide-react';
 import { 
   LabLogProLogo, 
-  UmpHcmLogo, 
-  UmpSchoolOfPharmacyLogo, 
-  BaocheDeptLogo, 
   AcademicHeaderBadges,
-  VilasLogo, 
-  Iso17025Badge 
 } from './LabLogos';
+
+
 
 interface AuthPageProps {
   onLoginSuccess: (user: User) => void;
@@ -52,8 +48,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   const [regEmail, setRegEmail] = useState<string>('');
   const [regPassword, setRegPassword] = useState<string>('');
   const [regRole, setRegRole] = useState<UserRole>('instructor');
-  const [regTitle, setRegTitle] = useState<string>('Giảng viên');
-  const [regDepartment, setRegDepartment] = useState<string>('');
+  const [regDeptChoice, setRegDeptChoice] = useState<string>(DEPARTMENT_OPTIONS[0]);
+  const [regDeptOther, setRegDeptOther] = useState<string>('');
   const [regPhone, setRegPhone] = useState<string>('');
 
   // Forgot password state
@@ -106,8 +102,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
       email: regEmail.trim(),
       password: regPassword,
       role: regRole,
-      title: regTitle.trim() || (regRole === 'instructor' ? 'Giảng viên' : 'Nghiên cứu viên'),
-      department: regDepartment.trim() || 'Phòng Thí nghiệm',
+      title: regRole === 'instructor' ? 'Giảng viên' : 'Trợ giảng/KTV',
+      department: (regDeptChoice === 'Khác' ? regDeptOther.trim() : regDeptChoice) || 'Phòng Thí nghiệm',
       phone: regPhone.trim() || '---',
     });
     setBusy(false);
@@ -179,66 +175,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
               <Sparkles className="w-3.5 h-3.5" />
               <span>Cổng Đăng Ký Trực Tuyến & Quản Trị Phòng Lab</span>
             </div>
-            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950/70 text-emerald-300 border border-emerald-800/60">
-              Chuẩn Quốc Tế ISO 17025:2017
-            </span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-            Quản Lý Lịch & Nhật Ký Thiết Bị Khoa Học
+            Quản lý lịch & nhật ký thiết bị khoa học
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
             Mỗi giảng viên, nghiên cứu viên và người hướng dẫn được cấp tài khoản riêng để chủ động đăng ký sử dụng. Tự động kiểm tra xung đột thời gian thực và ghi nhận nhật ký Check-in/Check-out minh bạch.
           </p>
 
-          {/* 3 Core Highlights */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-left">
-            <div className="p-3.5 bg-slate-800/60 rounded-xl border border-slate-700/60 space-y-1">
-              <CalendarDays className="w-5 h-5 text-blue-400" />
-              <h3 className="text-xs font-bold text-white">Tự Động Duyệt Ngay</h3>
-              <p className="text-[11px] text-slate-400">
-                Phê duyệt tức thì khi khung giờ còn trống, không lo trùng máy.
-              </p>
-            </div>
-
-            <div className="p-3.5 bg-slate-800/60 rounded-xl border border-slate-700/60 space-y-1">
-              <BookOpenCheck className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-xs font-bold text-white">Sổ Nhật Ký Điện Tử</h3>
-              <p className="text-[11px] text-slate-400">
-                Check-in/out, đánh giá tình trạng trước/sau & báo cáo sự cố.
-              </p>
-            </div>
-
-            <div className="p-3.5 bg-slate-800/60 rounded-xl border border-slate-700/60 space-y-1">
-              <ShieldCheck className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-xs font-bold text-white">Admin Quản Trị</h3>
-              <p className="text-[11px] text-slate-400">
-                Toàn quyền thêm bớt thiết bị, cấp phép và phân quyền tài khoản.
-              </p>
-            </div>
-          </div>
-
-          {/* Academic Governance & Department Badges */}
-          <div className="pt-3 border-t border-slate-800/80 space-y-2">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 text-center lg:text-left">
-              Đơn vị chủ quản & quản lý hệ thống:
-            </div>
-            <div className="flex items-center justify-center lg:justify-start gap-2.5 flex-wrap">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/80 text-teal-300 text-xs font-bold">
-                <UmpHcmLogo size={22} variant="icon" />
-                <span>ĐH Y Dược TP.HCM</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/80 text-emerald-300 text-xs font-bold">
-                <UmpSchoolOfPharmacyLogo size={22} variant="icon" />
-                <span>Trường Dược (UMPSP)</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/80 text-amber-300 text-xs font-bold">
-                <BaocheDeptLogo size={22} variant="icon" />
-                <span>Bộ Môn Bào Chế</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Right: Auth Box (Login / Register Card) */}
@@ -308,7 +254,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                 <div>
                   <div className="flex justify-between text-xs font-semibold text-slate-300 mb-1">
                     <span>Mật khẩu</span>
-                    <button type="button" onClick={() => switchMode('forgot')} className="text-[11px] text-blue-400 hover:text-blue-300 font-normal">
+                    <button type="button" onClick={() => switchMode('forgot')} className="text-xs text-blue-400 hover:text-blue-300 font-normal">
                       Quên mật khẩu?
                     </button>
                   </div>
@@ -337,12 +283,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
               </form>
 
               {config.registration === 'approval' && (
-                <p className="text-[11px] text-slate-400 leading-relaxed">
+                <p className="text-xs text-slate-400 leading-relaxed">
                   Chưa có tài khoản? Chọn <strong>Đăng Ký Tài Khoản</strong>; Quản trị viên phòng Lab sẽ kích hoạt sau khi xác minh.
                 </p>
               )}
               {config.registration === 'closed' && (
-                <p className="text-[11px] text-slate-400 leading-relaxed">Tài khoản do Quản trị viên phòng Lab cấp. Vui lòng liên hệ để được cấp quyền.</p>
+                <p className="text-xs text-slate-400 leading-relaxed">Tài khoản do Quản trị viên phòng Lab cấp. Vui lòng liên hệ để được cấp quyền.</p>
               )}
             </div>
           )}
@@ -405,7 +351,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Họ và tên giảng viên / nghiên cứu viên <span className="text-rose-400">*</span>
+                  Họ và tên <span className="text-rose-400">*</span>
                 </label>
                 <div className="relative">
                   <UserIcon className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
@@ -446,41 +392,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                   <select
                     value={regRole}
                     onChange={(e) => setRegRole(e.target.value as UserRole)}
-                    className="w-full px-2.5 py-2 text-xs bg-slate-900/80 border border-slate-700 rounded-lg text-white"
+                    className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white"
                   >
-                    <option value="instructor">Giảng viên / Hướng dẫn</option>
-                    <option value="researcher">Nghiên cứu viên / Học viên</option>
+                    <option value="instructor">Giảng viên</option>
+                    <option value="researcher">Trợ giảng/KTV bộ môn Bào chế</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Học hàm / Chức danh
-                  </label>
-                  <input
-                    type="text"
-                    value={regTitle}
-                    onChange={(e) => setRegTitle(e.target.value)}
-                    placeholder="vd: TS., ThS."
-                    className="w-full px-2.5 py-2 text-xs bg-slate-900/80 border border-slate-700 rounded-lg text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Khoa / Viện nghiên cứu
-                  </label>
-                  <div className="relative">
-                    <Building2 className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
-                    <input
-                      type="text"
-                      value={regDepartment}
-                      onChange={(e) => setRegDepartment(e.target.value)}
-                      placeholder="Khoa Hóa học..."
-                      className="w-full pl-8 pr-2 py-2 text-xs bg-slate-900/80 border border-slate-700 rounded-lg text-white"
-                    />
-                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
@@ -493,10 +409,35 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
                       placeholder="0912..."
-                      className="w-full pl-8 pr-2 py-2 text-xs bg-slate-900/80 border border-slate-700 rounded-lg text-white font-mono"
+                      className="w-full pl-8 pr-2 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white font-mono"
                     />
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Bộ môn / Trung tâm <span className="text-rose-400">*</span>
+                </label>
+                <select
+                  value={regDeptChoice}
+                  onChange={(e) => setRegDeptChoice(e.target.value)}
+                  className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white"
+                >
+                  {DEPARTMENT_OPTIONS.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+                {regDeptChoice === 'Khác' && (
+                  <input
+                    type="text"
+                    value={regDeptOther}
+                    onChange={(e) => setRegDeptOther(e.target.value)}
+                    placeholder="Nhập tên bộ môn / trung tâm"
+                    className="mt-2 w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white"
+                    required
+                  />
+                )}
               </div>
 
               <div>

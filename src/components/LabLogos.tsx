@@ -120,7 +120,7 @@ export const UmpHcmLogo: React.FC<LogoProps> = ({
       <div className={`inline-flex items-center gap-2.5 ${className}`}>
         {icon}
         <div className="flex flex-col text-left leading-tight">
-          <span className="text-[11px] font-black uppercase tracking-tight text-teal-950">
+          <span className="text-xs font-black uppercase tracking-tight text-teal-950">
             ĐẠI HỌC Y DƯỢC TP. HỒ CHÍ MINH
           </span>
           <span className="text-[9.5px] font-semibold text-teal-700">
@@ -135,10 +135,10 @@ export const UmpHcmLogo: React.FC<LogoProps> = ({
     <div className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-teal-50/80 border border-teal-200 text-teal-950 shadow-2xs ${className}`}>
       {icon}
       <div className="flex flex-col text-left leading-tight">
-        <span className="text-[10px] font-black uppercase tracking-wider text-teal-900">
+        <span className="text-xs font-black uppercase tracking-wider text-teal-900">
           ĐH Y DƯỢC TP.HCM
         </span>
-        <span className="text-[8.5px] font-semibold text-teal-700">
+        <span className="text-xs font-semibold text-teal-700">
           UMP · Est. 1947
         </span>
       </div>
@@ -261,7 +261,7 @@ export const UmpSchoolOfPharmacyLogo: React.FC<LogoProps> = ({
       <div className={`inline-flex items-center gap-2.5 ${className}`}>
         {icon}
         <div className="flex flex-col text-left leading-tight">
-          <span className="text-[11px] font-black uppercase tracking-tight text-emerald-950">
+          <span className="text-xs font-black uppercase tracking-tight text-emerald-950">
             TRƯỜNG DƯỢC · KHOA DƯỢC
           </span>
           <span className="text-[9.5px] font-semibold text-emerald-700">
@@ -276,10 +276,10 @@ export const UmpSchoolOfPharmacyLogo: React.FC<LogoProps> = ({
     <div className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-emerald-950 shadow-2xs ${className}`}>
       {icon}
       <div className="flex flex-col text-left leading-tight">
-        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-900">
+        <span className="text-xs font-black uppercase tracking-wider text-emerald-900">
           TRƯỜNG DƯỢC (KHOA DƯỢC)
         </span>
-        <span className="text-[8.5px] font-semibold text-emerald-700">
+        <span className="text-xs font-semibold text-emerald-700">
           UMPSP · ĐH Y Dược TP.HCM
         </span>
       </div>
@@ -295,137 +295,16 @@ export const BaocheDeptLogo: React.FC<LogoProps> = ({
   className = '',
   size = 36,
   variant = 'badge',
-}) => {
-  const icon = (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="shrink-0 drop-shadow-xs"
-    >
-      <defs>
-        {/* Department Colors: Deep Slate-Emerald & Royal Amber */}
-        <linearGradient id="bc-gradient-rim" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#065F46" />
-          <stop offset="50%" stopColor="#047857" />
-          <stop offset="100%" stopColor="#0F766E" />
-        </linearGradient>
-        <linearGradient id="bc-mortar" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#334155" />
-          <stop offset="50%" stopColor="#1E293B" />
-          <stop offset="100%" stopColor="#0F172A" />
-        </linearGradient>
-        <linearGradient id="bc-capsule-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#F59E0B" />
-          <stop offset="100%" stopColor="#D97706" />
-        </linearGradient>
-        <linearGradient id="bc-capsule-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#06B6D4" />
-          <stop offset="100%" stopColor="#0284C7" />
-        </linearGradient>
-        <path id="bc-text-path-top" d="M 16,50 A 34,34 0 1,1 84,50" />
-      </defs>
-
-      {/* Outer Rim */}
-      <circle cx="50" cy="50" r="48" fill="url(#bc-gradient-rim)" stroke="#064E3B" strokeWidth="1.5" />
-      {/* Precision measurement ticks */}
-      <circle cx="50" cy="50" r="44" stroke="#F59E0B" strokeWidth="1" strokeDasharray="2.5 1.5" />
-
-      {/* Clean White Inner Core */}
-      <circle cx="50" cy="50" r="33" fill="#FFFFFF" stroke="#047857" strokeWidth="1.2" />
-
-      {/* Top Arch Text: BỘ MÔN BÀO CHẾ */}
-      <text fill="#FFFFFF" fontSize="6.4" fontWeight="900" fontFamily="sans-serif" letterSpacing="0.8">
-        <textPath href="#bc-text-path-top" startOffset="50%" textAnchor="middle">
-          BỘ MÔN BÀO CHẾ · TRƯỜNG DƯỢC
-        </textPath>
-      </text>
-
-      {/* Bottom Subtitle Text */}
-      <text x="50" y="93" fill="#FFFFFF" fontSize="6.2" fontWeight="900" fontFamily="sans-serif" textAnchor="middle" letterSpacing="0.8">
-        PHARMACEUTICS · UMP
-      </text>
-
-      {/* Central Pharmaceutics Emblems */}
-
-      {/* 1. Traditional Mortar & Pestle (Cối và Chày sứ nghiền thuốc) */}
-      {/* Mortar Body */}
-      <path
-        d="M 31,52 C 31,64 40,68 50,68 C 60,68 69,64 69,52 L 67,50 L 33,50 Z"
-        fill="url(#bc-mortar)"
-        stroke="#0F172A"
-        strokeWidth="1.2"
-      />
-      {/* Mortar Rim */}
-      <ellipse cx="50" cy="50" rx="18" ry="4" fill="#475569" stroke="#0F172A" strokeWidth="1" />
-      {/* Mortar Base foot */}
-      <rect x="42" y="68" width="16" height="2.5" rx="1" fill="#1E293B" />
-
-      {/* Pestle (Chày giã nghiền dược chất) positioned diagonally */}
-      <path
-        d="M 40,32 L 46,30 L 58,54 L 52,56 Z"
-        fill="#94A3B8"
-        stroke="#0F172A"
-        strokeWidth="1"
-      />
-      <circle cx="43" cy="31" r="3" fill="#64748B" stroke="#0F172A" strokeWidth="1" />
-
-      {/* 2. Modern Drug Delivery Capsule (Viên nang bào chế công nghệ cao mở tỏa dược chất) */}
-      {/* Left half: Cyan */}
-      <rect x="34" y="38" width="10" height="6" rx="3" transform="rotate(-25 34 38)" fill="url(#bc-capsule-cyan)" stroke="#0369A1" strokeWidth="0.8" />
-      {/* Right half: Gold Amber */}
-      <rect x="58" y="34" width="10" height="6" rx="3" transform="rotate(25 58 34)" fill="url(#bc-capsule-gold)" stroke="#B45309" strokeWidth="0.8" />
-
-      {/* Micro-pellets / Nano-particles dispersing into formulation */}
-      <circle cx="47" cy="42" r="1.2" fill="#0098A6" />
-      <circle cx="50" cy="40" r="1.4" fill="#F59E0B" />
-      <circle cx="53" cy="43" r="1.2" fill="#10B981" />
-      <circle cx="49" cy="46" r="1.3" fill="#0284C7" />
-
-      {/* Leaf of Medicinal Plant (Cành thảo dược thiên nhiên) */}
-      <path
-        d="M 64,48 C 69,45 71,40 71,40 C 71,40 67,41 63,45 C 60,48 61,50 64,48 Z"
-        fill="#10B981"
-      />
-    </svg>
-  );
-
-  if (variant === 'icon') {
-    return <div className={`inline-flex items-center ${className}`}>{icon}</div>;
-  }
-
-  if (variant === 'horizontal') {
-    return (
-      <div className={`inline-flex items-center gap-2.5 ${className}`}>
-        {icon}
-        <div className="flex flex-col text-left leading-tight">
-          <span className="text-[11px] font-black uppercase tracking-tight text-emerald-950">
-            BỘ MÔN BÀO CHẾ
-          </span>
-          <span className="text-[9.5px] font-semibold text-emerald-700">
-            Khoa Dược · ĐH Y Dược TP.HCM
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-950 shadow-2xs ${className}`}>
-      {icon}
-      <div className="flex flex-col text-left leading-tight">
-        <span className="text-[10px] font-black uppercase tracking-wider text-amber-900">
-          BỘ MÔN BÀO CHẾ
-        </span>
-        <span className="text-[8.5px] font-semibold text-amber-700">
-          Trường Dược · ĐH Y Dược TP.HCM
-        </span>
-      </div>
-    </div>
-  );
-};
+}) => (
+  <img
+    src="/logos/bao-che.jpg"
+    alt="Logo Bộ môn Bào chế"
+    width={size}
+    height={size}
+    className={`rounded-full object-contain ${className}`}
+    data-variant={variant}
+  />
+);
 
 // ============================================================================
 // 4. BỘ 3 LOGO HỌC THUẬT CHÍNH THỨC (TRIPLET ACADEMIC HEADER BADGES)
@@ -446,13 +325,13 @@ export const AcademicHeaderBadges: React.FC<{
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         <div title="Đại học Y Dược TP. Hồ Chí Minh (UMP)">
-          <UmpHcmLogo size={24} variant="icon" />
+          <img src="/logos/ump-hcm.jpg" alt="" width={24} height={24} className="rounded-full object-contain" />
         </div>
         <div title="Trường Dược - ĐH Y Dược TP.HCM (UMPSP)">
-          <UmpSchoolOfPharmacyLogo size={24} variant="icon" />
+          <img src="/logos/truong-duoc.png" alt="" width={24} height={24} className="rounded-full object-contain" />
         </div>
         <div title="Bộ môn Bào chế - Trường Dược - ĐH Y Dược TP.HCM">
-          <BaocheDeptLogo size={24} variant="icon" />
+          <img src="/logos/bao-che.jpg" alt="" width={24} height={24} className="rounded-full object-contain" />
         </div>
       </div>
     );
@@ -471,13 +350,13 @@ export const AcademicHeaderBadges: React.FC<{
         }`}
         title="Đại học Y Dược TP. Hồ Chí Minh (Thành lập 1947)"
       >
-        <UmpHcmLogo size={26} variant="icon" />
+        <img src="/logos/ump-hcm.jpg" alt="" width={26} height={26} className="rounded-full object-contain" />
         {showLabels && (
           <div className="flex flex-col text-left leading-none">
-            <span className={`text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-teal-300' : 'text-teal-900'}`}>
+            <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-teal-300' : 'text-teal-900'}`}>
               ĐH Y DƯỢC TP.HCM
             </span>
-            <span className={`text-[8.5px] font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-teal-700'}`}>
+            <span className={`text-xs font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-teal-700'}`}>
               UMP · 1947
             </span>
           </div>
@@ -493,13 +372,13 @@ export const AcademicHeaderBadges: React.FC<{
         }`}
         title="Trường Dược (Khoa Dược) - Đại học Y Dược TP.HCM"
       >
-        <UmpSchoolOfPharmacyLogo size={26} variant="icon" />
+        <img src="/logos/truong-duoc.png" alt="" width={26} height={26} className="rounded-full object-contain" />
         {showLabels && (
           <div className="flex flex-col text-left leading-none">
-            <span className={`text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-emerald-300' : 'text-emerald-900'}`}>
+            <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-emerald-300' : 'text-emerald-900'}`}>
               TRƯỜNG DƯỢC
             </span>
-            <span className={`text-[8.5px] font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-emerald-700'}`}>
+            <span className={`text-xs font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-emerald-700'}`}>
               UMPSP · Khoa Dược
             </span>
           </div>
@@ -515,13 +394,13 @@ export const AcademicHeaderBadges: React.FC<{
         }`}
         title="Bộ môn Bào chế - ĐH Y Dược TP.HCM"
       >
-        <BaocheDeptLogo size={26} variant="icon" />
+        <img src="/logos/bao-che.jpg" alt="" width={26} height={26} className="rounded-full object-contain" />
         {showLabels && (
           <div className="flex flex-col text-left leading-none">
-            <span className={`text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-amber-300' : 'text-amber-900'}`}>
+            <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-amber-300' : 'text-amber-900'}`}>
               BỘ MÔN BÀO CHẾ
             </span>
-            <span className={`text-[8.5px] font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-amber-700'}`}>
+            <span className={`text-xs font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-amber-700'}`}>
               Pharmaceutics Dept.
             </span>
           </div>
@@ -596,11 +475,11 @@ export const LabLogProLogo: React.FC<LogoProps> = ({
       <div className="flex flex-col text-left">
         <div className="flex items-center gap-1.5 leading-none">
           <span className="text-base font-extrabold tracking-tight text-slate-900">LabLog</span>
-          <span className="px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-2xs">
+          <span className="px-1.5 py-0.5 text-xs font-black uppercase tracking-wider rounded bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-2xs">
             BÀO CHẾ
           </span>
         </div>
-        <span className="text-[10px] font-semibold text-slate-500 tracking-tight mt-0.5 truncate max-w-[210px]">
+        <span className="text-xs font-semibold text-slate-500 tracking-tight mt-0.5 truncate max-w-[210px]">
           Bộ Môn Bào Chế · ĐH Y Dược TP.HCM
         </span>
       </div>
@@ -640,7 +519,7 @@ export const VilasLogo: React.FC<LogoProps> = ({
     <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-sky-50 border border-sky-200 text-sky-950 ${className}`}>
       {icon}
       <div className="flex flex-col text-left leading-tight">
-        <span className="text-[10px] font-extrabold text-sky-900 tracking-tight">VILAS 886</span>
+        <span className="text-xs font-extrabold text-sky-900 tracking-tight">VILAS 886</span>
         <span className="text-[8px] font-semibold text-sky-700">Chuẩn Thử Nghiệm VN</span>
       </div>
     </div>
@@ -674,7 +553,7 @@ export const Iso17025Badge: React.FC<LogoProps> = ({
     <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-950 ${className}`}>
       {icon}
       <div className="flex flex-col text-left leading-tight">
-        <span className="text-[10px] font-extrabold text-emerald-900 tracking-tight">ISO/IEC 17025</span>
+        <span className="text-xs font-extrabold text-emerald-900 tracking-tight">ISO/IEC 17025</span>
         <span className="text-[8px] font-semibold text-emerald-700">Dược Điển VN V / USP</span>
       </div>
     </div>

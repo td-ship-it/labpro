@@ -10,8 +10,6 @@ import { LabStorage, localDateStr } from '../services/storage';
 import { calculateEquipmentMaintenanceForecast } from '../services/maintenanceForecaster';
 import { ActiveTab } from './Navbar';
 import { 
-  UmpHcmLogo, 
-  UmpSchoolOfPharmacyLogo, 
   BaocheDeptLogo, 
   AcademicHeaderBadges,
   VilasLogo, 
@@ -289,15 +287,15 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
             {/* Official Academic Badges Strip in Welcome Banner */}
             <div className="pt-2 flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-900/60 text-[11px] font-bold text-teal-200 border border-teal-500/30">
-                <UmpHcmLogo size={20} variant="icon" />
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-900/60 text-xs font-bold text-teal-200 border border-teal-500/30">
+                <img src="/logos/ump-hcm.jpg" alt="" width={20} height={20} className="rounded-full object-contain" />
                 <span>ĐH Y Dược TP.HCM (UMP)</span>
               </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-900/60 text-[11px] font-bold text-emerald-200 border border-emerald-500/30">
-                <UmpSchoolOfPharmacyLogo size={20} variant="icon" />
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-900/60 text-xs font-bold text-emerald-200 border border-emerald-500/30">
+                <img src="/logos/truong-duoc.png" alt="" width={20} height={20} className="rounded-full object-contain" />
                 <span>Trường Dược (UMPSP)</span>
               </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-900/60 text-[11px] font-bold text-amber-200 border border-amber-500/30">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-900/60 text-xs font-bold text-amber-200 border border-amber-500/30">
                 <BaocheDeptLogo size={20} variant="icon" />
                 <span>Bộ Môn Bào Chế</span>
               </div>
@@ -364,7 +362,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+                      <span className={`text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded ${
                         session.isOverdue ? 'bg-red-600 text-white' : 'bg-amber-600 text-white'
                       }`}>
                         {session.isOverdue ? '🚨 ĐÃ QUÁ HẠN CHECK-OUT' : '⚠️ BẠN ĐANG TRONG CA VẬN HÀNH'}
@@ -440,7 +438,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </span>
             <span className="text-xs text-slate-400">/ {stats.totalEquipment} máy</span>
           </div>
-          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-700 font-medium">
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-700 font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
             <span>Đang trong ca đo thực tế</span>
           </div>
@@ -463,7 +461,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </span>
             <span className="text-xs text-slate-400">máy rảnh</span>
           </div>
-          <div className="mt-2 text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+          <div className="mt-2 text-xs text-emerald-700 font-medium flex items-center gap-1">
             <span>Chiếm {Math.round((stats.availableEquipment / (stats.totalEquipment || 1)) * 100)}% công suất lab</span>
           </div>
         </div>
@@ -492,7 +490,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </span>
             <span className="text-xs text-rose-600 font-medium">vấn đề</span>
           </div>
-          <div className="mt-2 text-[11px] text-rose-700 flex items-center gap-1 font-medium">
+          <div className="mt-2 text-xs text-rose-700 flex items-center gap-1 font-medium">
             <span>{overdueSessions.length} ca quá hạn · {maintenanceAlerts.length} máy bảo trì</span>
           </div>
         </div>
@@ -514,7 +512,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </span>
             <span className="text-xs text-slate-400">ca đã duyệt</span>
           </div>
-          <div className="mt-2 text-[11px] text-blue-700 font-medium flex items-center gap-1">
+          <div className="mt-2 text-xs text-blue-700 font-medium flex items-center gap-1">
             <span>{myBookingsToday.length} ca của bạn trong ngày</span>
           </div>
         </div>
@@ -536,7 +534,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <span>Cảnh Báo Ca Đo Quá Hạn Chưa Check-Out</span>
                   {overdueSessions.length > 0 && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 animate-pulse">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 animate-pulse">
                       {overdueSessions.length} ca cần xử lý
                     </span>
                   )}
@@ -594,7 +592,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                               {equipment.name}
                             </span>
                             {isCurrentUser && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">
                                 Ca của bạn
                               </span>
                             )}
@@ -656,7 +654,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                     <span>Thiết Bị Đến Hạn Bảo Trì & Hiệu Chuẩn</span>
                     {maintenanceAlerts.length > 0 && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
                         {maintenanceAlerts.length} máy
                       </span>
                     )}
@@ -713,7 +711,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                               {eq.name}
                             </h4>
                           </div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-600 mt-1">
+                          <div className="flex items-center gap-2 text-xs text-slate-600 mt-1">
                             <span>Phòng: <strong>{eq.room}</strong></span>
                             <span>·</span>
                             <span>Phụ trách: {eq.responsibleStaff}</span>
@@ -721,7 +719,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         </div>
 
                         <div className="text-right shrink-0">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                             isMaintenance
                               ? 'bg-rose-600 text-white'
                               : forecast.urgency === 'overdue'
@@ -738,7 +736,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
                       {/* Wear Progress */}
                       <div className="mt-2.5 space-y-1">
-                        <div className="flex justify-between text-[11px] text-slate-600">
+                        <div className="flex justify-between text-xs text-slate-600">
                           <span>Đã chạy: <strong>{forecast.hoursSinceLastMaintenance}h</strong>/{forecast.maxOperatingHoursThreshold}h</span>
                           <span>Hạn: <strong>{forecast.predictedMaintenanceDate}</strong></span>
                         </div>
@@ -753,7 +751,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                       </div>
 
                       {/* Quick Advice */}
-                      <p className="text-[11px] text-slate-600 mt-2 line-clamp-1 italic">
+                      <p className="text-xs text-slate-600 mt-2 line-clamp-1 italic">
                         {forecast.actionRecommendation}
                       </p>
                     </div>
@@ -774,7 +772,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                     <span>Tin Nhắn & Thông Báo Mới Nhất</span>
                     {unreadEmailCount > 0 && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-rose-600 text-white">
+                      <span className="text-xs font-bold px-1.5 py-0.2 rounded-full bg-rose-600 text-white">
                         {unreadEmailCount} mới
                       </span>
                     )}
@@ -821,18 +819,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             <span className="text-xs font-bold text-slate-900 line-clamp-1">
                               {email.subject}
                             </span>
-                            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+                            <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
                               {email.htmlPreview.headline || email.htmlPreview.greeting}
                             </p>
                           </div>
                         </div>
 
-                        <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0">
+                        <span className="text-xs text-slate-400 whitespace-nowrap shrink-0">
                           {getRelativeTime(email.sentAt)}
                         </span>
                       </div>
 
-                      <div className="mt-1 pl-4.5 flex items-center gap-2 text-[10px] text-slate-400">
+                      <div className="mt-1 pl-4.5 flex items-center gap-2 text-xs text-slate-400">
                         <span className="text-slate-600 font-medium">Gửi tới: {email.toName}</span>
                         {email.equipmentCode && (
                           <span className="font-mono bg-slate-100 px-1 rounded text-slate-700">
@@ -907,10 +905,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             {eq?.name || b.equipmentId}
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-500">
+                        <div className="text-xs text-slate-500">
                           {eq?.room} · Mục đích: {b.purpose}
                           {b.projectCode && (
-                            <span className="ml-1.5 font-mono text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.2 rounded font-semibold border border-indigo-200">
+                            <span className="ml-1.5 font-mono text-xs bg-indigo-50 text-indigo-700 px-1.5 py-0.2 rounded font-semibold border border-indigo-200">
                               {b.projectCode}
                             </span>
                           )}
@@ -942,7 +940,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                           </button>
                         )}
                         {isCompleted && (
-                          <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                          <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
                             Đã bàn giao
                           </span>
                         )}
@@ -985,10 +983,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <div key={roomName} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
                     <div className="flex items-center justify-between font-bold text-xs text-slate-800">
                       <span>{roomName}</span>
-                      <span className="font-mono text-slate-500 text-[11px]">{roomEq.length} máy</span>
+                      <span className="font-mono text-slate-500 text-xs">{roomEq.length} máy</span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-[10px]">
+                    <div className="flex items-center gap-2 text-xs">
                       <span className="text-emerald-700 font-semibold">● {available} rảnh</span>
                       <span className="text-amber-700 font-semibold">● {inUse} dùng</span>
                       {maint > 0 && <span className="text-rose-700 font-semibold">● {maint} bảo trì</span>}
@@ -1041,12 +1039,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           {/* Card 1: UMP */}
           <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-200/80 space-y-2.5 transition-all hover:shadow-xs">
             <div className="flex items-center gap-3">
-              <UmpHcmLogo size={40} variant="icon" />
+              <img src="/logos/ump-hcm.jpg" alt="" width={40} height={40} className="rounded-full object-contain" />
               <div>
                 <h4 className="text-xs font-black uppercase tracking-tight text-teal-950">
                   Đại Học Y Dược TP.HCM
                 </h4>
-                <p className="text-[11px] font-semibold text-teal-700">
+                <p className="text-xs font-semibold text-teal-700">
                   UMP · Thành lập năm 1947
                 </p>
               </div>
@@ -1054,7 +1052,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <p className="text-xs text-slate-600 leading-relaxed">
               Trường đại học trọng điểm quốc gia hàng đầu trong đào tạo nguồn nhân lực y tế, nghiên cứu khoa học và chuyển giao công nghệ y dược tại Việt Nam.
             </p>
-            <div className="pt-1 flex items-center gap-2 text-[10px] text-teal-800 font-semibold">
+            <div className="pt-1 flex items-center gap-2 text-xs text-teal-800 font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-600" />
               <span>Cơ quan chủ quản cấp trường</span>
             </div>
@@ -1063,12 +1061,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           {/* Card 2: Trường Dược (Khoa Dược) */}
           <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200/80 space-y-2.5 transition-all hover:shadow-xs">
             <div className="flex items-center gap-3">
-              <UmpSchoolOfPharmacyLogo size={40} variant="icon" />
+              <img src="/logos/truong-duoc.png" alt="" width={40} height={40} className="rounded-full object-contain" />
               <div>
                 <h4 className="text-xs font-black uppercase tracking-tight text-emerald-950">
                   Trường Dược (Khoa Dược)
                 </h4>
-                <p className="text-[11px] font-semibold text-emerald-700">
+                <p className="text-xs font-semibold text-emerald-700">
                   UMPSP · Faculty / School of Pharmacy
                 </p>
               </div>
@@ -1076,7 +1074,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <p className="text-xs text-slate-600 leading-relaxed">
               Đơn vị đào tạo Dược sĩ đại học và sau đại học chuẩn mực quốc tế, sở hữu hệ thống các phòng thí nghiệm nghiên cứu chuyên sâu về thuốc và dược liệu.
             </p>
-            <div className="pt-1 flex items-center gap-2 text-[10px] text-emerald-800 font-semibold">
+            <div className="pt-1 flex items-center gap-2 text-xs text-emerald-800 font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
               <span>Đơn vị quản lý cấp Khoa/Trường</span>
             </div>
@@ -1090,7 +1088,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <h4 className="text-xs font-black uppercase tracking-tight text-amber-950">
                   Bộ Môn Bào Chế
                 </h4>
-                <p className="text-[11px] font-semibold text-amber-700">
+                <p className="text-xs font-semibold text-amber-700">
                   Department of Pharmaceutics
                 </p>
               </div>
@@ -1098,7 +1096,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <p className="text-xs text-slate-600 leading-relaxed">
               Bộ môn trực tiếp quản lý và vận hành danh mục thiết bị thực tập, nghiên cứu hệ phân tán nano, viên nén, viên nang, thuốc tiêm và thử nghiệm độ hòa tan.
             </p>
-            <div className="pt-1 flex items-center gap-2 text-[10px] text-amber-800 font-semibold">
+            <div className="pt-1 flex items-center gap-2 text-xs text-amber-800 font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
               <span>Đơn vị trực tiếp quản lý thiết bị</span>
             </div>
@@ -1109,11 +1107,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600">
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-800">Tiêu chuẩn kỹ thuật áp dụng:</span>
-            <span className="px-2 py-0.5 rounded bg-slate-100 text-[11px] font-semibold text-slate-700">Dược điển Việt Nam V</span>
-            <span className="px-2 py-0.5 rounded bg-slate-100 text-[11px] font-semibold text-slate-700">USP & EP</span>
-            <span className="px-2 py-0.5 rounded bg-slate-100 text-[11px] font-semibold text-slate-700">ISO/IEC 17025</span>
+            <span className="px-2 py-0.5 rounded bg-slate-100 text-xs font-semibold text-slate-700">Dược điển Việt Nam V</span>
+            <span className="px-2 py-0.5 rounded bg-slate-100 text-xs font-semibold text-slate-700">USP & EP</span>
+            <span className="px-2 py-0.5 rounded bg-slate-100 text-xs font-semibold text-slate-700">ISO/IEC 17025</span>
           </div>
-          <div className="text-[11px] text-slate-500">
+          <div className="text-xs text-slate-500">
             Hệ thống nhật ký vận hành điện tử minh bạch & quản lý lịch máy tự động
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Equipment, EquipmentCategory } from '../types';
 import { X, AlertCircle } from 'lucide-react';
+import { LabStorage } from '../services/storage';
 
 interface EquipmentModalProps {
   isOpen: boolean;
@@ -28,6 +29,8 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
   const [responsibleStaff, setResponsibleStaff] = useState<string>('');
   const [status, setStatus] = useState<Equipment['status']>('available');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [trainedIds, setTrainedIds] = useState<string[]>([]);
+  const allUsers = LabStorage.getUsers().filter((u) => u.role !== 'admin' && u.status === 'active');
 
   useEffect(() => {
     if (equipmentToEdit) {
@@ -41,6 +44,7 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
       setSpecs(equipmentToEdit.specs);
       setSafetyGuidelines(equipmentToEdit.safetyGuidelines);
       setMaxHours(equipmentToEdit.maxBookingHoursPerSession);
+      setTrainedIds(equipmentToEdit.trainedUserIds || []);
       setResponsibleStaff(equipmentToEdit.responsibleStaff);
       setStatus(equipmentToEdit.status);
     } else {
@@ -54,6 +58,7 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
       setSpecs('');
       setSafetyGuidelines('Tuân thủ nghiêm ngặt quy định phòng thí nghiệm và bảo hộ lao động cá nhân.');
       setMaxHours(4);
+      setTrainedIds([]);
       setResponsibleStaff('');
       setStatus('available');
     }
@@ -80,7 +85,8 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
       model: model.trim() || 'Tiêu chuẩn',
       specs: specs.trim() || 'Thông số kỹ thuật tiêu chuẩn phòng lab',
       safetyGuidelines: safetyGuidelines.trim(),
-      maxBookingHoursPerSession: Number(maxHours) || 4,
+      maxBookingHoursPerSession: Math.max(1, Number(maxHours) || 1),
+      trainedUserIds: trainedIds,
       responsibleStaff: responsibleStaff.trim() || 'Quản lý phòng máy',
       status,
     };
@@ -116,6 +122,28 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
               <span>{errorMsg}</span>
             </div>
           )}
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Danh sách người đã được tập huấn sử dụng máy
+            </label>
+            <p className="text-xs text-slate-500 mb-1.5">Chỉ những người được chọn (và Admin) mới đăng ký và nhận máy này. Máy chỉ hiện với họ.</p>
+            <div className="max-h-40 overflow-y-auto border border-slate-300 rounded-lg divide-y divide-slate-100">
+              {allUsers.length === 0 && <div className="p-2 text-xs text-slate-400">Chưa có tài khoản giảng viên / trợ giảng đang hoạt động.</div>}
+              {allUsers.map((u) => (
+                <label key={u.id} className="flex items-center gap-2 px-3 py-1.5 text-xs cursor-pointer hover:bg-slate-50">
+                  <input
+                    type="checkbox"
+                    checked={trainedIds.includes(u.id)}
+                    onChange={(e) => setTrainedIds(e.target.checked ? [...trainedIds, u.id] : trainedIds.filter((x) => x !== u.id))}
+                  />
+                  <span className="font-semibold text-slate-800">{u.title ? u.title + ' ' : ''}{u.name}</span>
+                  <span className="text-slate-400 truncate">{u.email}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Đã chọn: {trainedIds.length} người</p>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -222,12 +250,12 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Thời lượng tối đa mỗi ca (giờ)
+                Thời lượng tối đa mỗi ca (giờ) · tối thiểu 1 giờ
               </label>
               <input
                 type="number"
                 min="1"
-                max="24"
+                step="0.5"
                 value={maxHours}
                 onChange={(e) => setMaxHours(Number(e.target.value))}
                 className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden font-mono"

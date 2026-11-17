@@ -65,13 +65,13 @@ export const EquipmentVisual: React.FC<EquipmentVisualProps> = ({ category, code
         <div className="p-2.5 bg-white rounded-lg shadow-2xs border border-slate-200/60">
           {config.icon}
         </div>
-        <span className="font-mono text-[11px] font-semibold text-slate-600 px-2 py-0.5 bg-white/80 rounded border border-slate-200/80">
+        <span className="font-mono text-xs font-semibold text-slate-600 px-2 py-0.5 bg-white/80 rounded border border-slate-200/80">
           {code}
         </span>
       </div>
 
       <div className="z-10 mt-auto">
-        <span className="text-[11px] font-mono text-slate-500 block truncate">
+        <span className="text-xs font-mono text-slate-500 block truncate">
           {config.tag}
         </span>
       </div>

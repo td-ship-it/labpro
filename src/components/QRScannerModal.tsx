@@ -193,7 +193,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
                 </div>
 
                 {cameraError && (
-                  <p className="text-[11px] text-amber-300 mt-3 max-w-md bg-amber-950/60 p-2 rounded-lg border border-amber-800">
+                  <p className="text-xs text-amber-300 mt-3 max-w-md bg-amber-950/60 p-2 rounded-lg border border-amber-800">
                     {cameraError}
                   </p>
                 )}
@@ -321,10 +321,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                      <span className="font-mono text-xs font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200">
                         {eq.code}
                       </span>
-                      <span className={`text-[10px] ${
+                      <span className={`text-xs ${
                         eq.status === 'available' ? 'text-emerald-600' : eq.status === 'in_use' ? 'text-amber-600' : 'text-rose-600'
                       }`}>
                         {eq.status === 'available' ? '● Sẵn sàng' : eq.status === 'in_use' ? '● Đang đo' : '● Bảo trì'}
@@ -333,7 +333,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
                     <div className="text-xs font-semibold text-slate-900 truncate mt-1">
                       {eq.name}
                     </div>
-                    <div className="text-[11px] text-slate-500 truncate">
+                    <div className="text-xs text-slate-500 truncate">
                       {eq.room} • {eq.responsibleStaff}
                     </div>
                   </div>

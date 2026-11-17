@@ -169,8 +169,12 @@ Lần đăng nhập đầu tiên trong ngày có thể chậm hơn 1–3 giây v
 
 ## Quy tắc nghiệp vụ (kiểm tra ở máy chủ)
 
-- **Đặt lịch**: tự duyệt nếu khung giờ trống; chặn trùng giờ (kể cả khi 2 người bấm cùng lúc — có khóa ghi), chặn giờ đã qua, chặn máy đang bảo trì. Gửi email xác nhận.
-- **Nhắc lịch**: email tự động khoảng 15–45 phút trước giờ bắt đầu.
+- **Đặt lịch**: tự duyệt nếu khung giờ trống; chặn trùng giờ (kể cả khi 2 người bấm cùng lúc — có khóa ghi), chặn giờ đã qua, chặn máy đang bảo trì. **Bắt buộc gắn đề tài**. Chỉ người có tên trong **danh sách tập huấn** của máy (và Admin) mới đặt và nhận được máy; danh sách máy hiển thị cũng theo tài khoản. Ghi chú: bộ môn mở cửa thứ Hai–Thứ Sáu, 07:30–17:00.
+- **Email xác nhận**: gửi tự động **1 giờ trước** giờ sử dụng (không gửi ngay khi đặt). **Nhắc lịch**: email khoảng 15–45 phút trước giờ bắt đầu.
+- **Tự check-out**: hết ca đã đăng ký mà người dùng chưa trả máy → hệ thống tự check-out đúng giờ kết thúc và ghi chú "[Tự động check-out]" vào nhật ký để báo cáo.
+- **Báo Admin**: mỗi lần nhận máy / trả máy, Admin nhận thông báo (hộp thư + email); tài khoản mới đăng ký cũng báo Admin.
+- **Thiết bị**: thời lượng tối đa mỗi ca tối thiểu 1 giờ, không giới hạn trên (Admin tự đặt cho từng máy).
+- **Đề tài**: mã tự tạo từ chữ cái đầu tên đề tài + năm bắt đầu (vd. NCNV-2026) nếu để trống; có **cơ quan chủ trì**; người tạo hoặc Admin điều chỉnh được thông tin sau khi đăng ký.
 - **Nhận máy**: trong ngày của lịch, từ 30 phút trước giờ bắt đầu đến trước giờ kết thúc. Nhận máy đột xuất (không có lịch) bị chặn nếu khung giờ hiện tại đã có người khác đặt.
 - **Trả máy**: chỉ người nhận máy hoặc Admin. Hệ thống tự tính thời lượng, giá vật tư lấy theo danh mục, **trừ tồn kho vật tư**. Báo sự cố hoặc tình trạng *Hư hỏng* → máy tự chuyển **Bảo trì** và email cho mọi Admin.
 - **Ghi nhận bảo trì** (Admin) → máy về trạng thái Sẵn sàng.
@@ -184,13 +188,13 @@ Lần đăng nhập đầu tiên trong ngày có thể chậm hơn 1–3 giây v
 | Sheet | Nội dung |
 |---|---|
 | `NguoiDung` | Tài khoản (cột `passwordHash`, `salt` là mật khẩu đã băm — **không sửa tay**) |
-| `ThietBi` | Danh mục thiết bị; cột `sopSteps`, `videoTutorial`, `quickChecklist`, `maintenanceConfig` dạng JSON |
+| `ThietBi` | Danh mục thiết bị; cột `sopSteps`, `videoTutorial`, `quickChecklist`, `maintenanceConfig`, `trainedUserIds` (danh sách tập huấn) dạng JSON |
 | `LichDat` | Lịch đặt máy |
 | `NhatKySuDung` | Nhật ký nhận/trả máy |
 | `ThongBao` | Hộp thư trong ứng dụng (bản lưu email đã gửi) |
 | `GhiChuNhanh` | Ghi chú cấu hình theo thiết bị |
 | `BaoTri` | Phiếu bảo trì / hiệu chuẩn |
-| `DeTai` | Đề tài / dự án nghiên cứu |
+| `DeTai` | Đề tài / dự án nghiên cứu (cột `leadAgency` = cơ quan chủ trì) |
 | `VatTu` | Danh mục vật tư tiêu hao và tồn kho |
 | `TaiLieuAI` | Tài liệu cho Trợ lý AI (mỗi dòng một đoạn) |
 | `LichSuThaoTac` | Nhật ký thao tác hệ thống |

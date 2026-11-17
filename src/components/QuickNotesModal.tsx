@@ -217,7 +217,7 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
                   <span>Quick Notes & Hướng Dẫn Vận Hành</span>
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-500/30 text-blue-200 font-mono font-medium">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/30 text-blue-200 font-mono font-medium">
                     {eqNotes.length} ghi chú
                   </span>
                 </h2>
@@ -259,10 +259,10 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
                       : 'bg-white text-slate-700 hover:bg-slate-200/70 border border-slate-200'
                   }`}
                 >
-                  <span className="font-mono text-[11px] font-bold">[{eq.code}]</span>
+                  <span className="font-mono text-xs font-bold">[{eq.code}]</span>
                   <span className="max-w-[140px] truncate">{eq.name}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    className={`text-xs px-1.5 py-0.2 rounded-full font-mono ${
                       isSelected ? 'bg-blue-800 text-blue-100' : 'bg-slate-100 text-slate-600'
                     }`}
                   >
@@ -533,20 +533,20 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           {note.isPinned && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
                               <Pin className="w-3 h-3 text-amber-600 fill-amber-500" />
                               <span>Ghim Ưu Tiên</span>
                             </span>
                           )}
 
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-semibold border ${catInfo.badgeClass}`}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-semibold border ${catInfo.badgeClass}`}
                           >
                             {catInfo.icon}
                             <span>{catInfo.label}</span>
                           </span>
 
-                          <span className="text-[11px] text-slate-400 font-mono">
+                          <span className="text-xs text-slate-400 font-mono">
                             {new Date(note.createdAt).toLocaleDateString('vi-VN')}
                           </span>
                         </div>
@@ -560,7 +560,7 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
                       <div className="flex items-center gap-1.5 self-start shrink-0">
                         <button
                           onClick={() => handleCopyNoteParams(note)}
-                          className={`px-2.5 py-1 text-[11px] font-medium rounded-lg border transition-colors flex items-center gap-1 ${
+                          className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1 ${
                             isCopied
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
                               : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200'
@@ -605,7 +605,7 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
                     {/* Parameters Table Grid if available */}
                     {note.parameters && note.parameters.length > 0 && (
                       <div className="space-y-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
                           <Sliders className="w-3 h-3 text-slate-400" />
                           <span>Thông số cài đặt tham chiếu:</span>
                         </span>
@@ -629,9 +629,9 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
                     )}
 
                     {/* Author & Lab Department Footer */}
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-500">
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
                       <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-[10px]">
+                        <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs">
                           {note.authorName.charAt(0)}
                         </div>
                         <span className="font-semibold text-slate-800">
@@ -641,7 +641,7 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
                         <span className="text-slate-500">{note.authorDepartment}</span>
                       </div>
 
-                      <div className="flex items-center gap-1 text-slate-400 text-[10px]">
+                      <div className="flex items-center gap-1 text-slate-400 text-xs">
                         <Clock className="w-3 h-3" />
                         <span>Đã lưu vào hệ thống</span>
                       </div>

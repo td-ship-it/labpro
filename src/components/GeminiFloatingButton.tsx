@@ -29,7 +29,7 @@ export const GeminiFloatingButton: React.FC<GeminiFloatingButtonProps> = ({ onCl
             <span>Trợ Lý AI</span>
             <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
           </div>
-          <div className="text-[10px] text-cyan-100 font-medium flex items-center gap-1 leading-tight">
+          <div className="text-xs text-cyan-100 font-medium flex items-center gap-1 leading-tight">
             <Globe className="w-2.5 h-2.5 text-emerald-300" />
             <span>Hỏi đáp SOP & thiết bị</span>
           </div>

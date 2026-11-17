@@ -89,7 +89,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
               <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
                 Dự Báo Mật Độ Sử Dụng Theo Giờ Trong Ngày
               </h2>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-amber-600" />
                 Tránh Giờ Cao Điểm
               </span>
@@ -156,7 +156,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setDayFilter('all')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                     dayFilter === 'all'
                       ? 'bg-indigo-600 text-white'
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
@@ -166,7 +166,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
                 </button>
                 <button
                   onClick={() => setDayFilter('weekdays')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                     dayFilter === 'weekdays'
                       ? 'bg-indigo-600 text-white'
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
@@ -176,7 +176,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
                 </button>
                 <button
                   onClick={() => setDayFilter('weekends')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                     dayFilter === 'weekends'
                       ? 'bg-indigo-600 text-white'
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
@@ -189,7 +189,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
           </div>
 
           {/* Quick Legend */}
-          <div className="flex items-center gap-3 text-[11px] text-slate-500 font-medium">
+          <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
             <span className="flex items-center gap-1">
               <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500" />
               <span>&lt;35% Thấp điểm</span>
@@ -219,14 +219,14 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
               <Flame className="w-4 h-4 text-rose-600" />
               <span>Khung Giờ Cao Điểm</span>
             </span>
-            <span className="px-1.5 py-0.5 rounded-md bg-rose-200/80 text-rose-900 text-[10px] uppercase tracking-wider font-extrabold">
+            <span className="px-1.5 py-0.5 rounded-md bg-rose-200/80 text-rose-900 text-xs uppercase tracking-wider font-extrabold">
               Nên Tránh
             </span>
           </div>
           <div className="text-base sm:text-lg font-bold font-mono text-rose-900">
             {forecast.peakHourRanges[0] || '09:00 - 11:30'}
           </div>
-          <p className="text-[11px] text-rose-700 leading-snug">
+          <p className="text-xs text-rose-700 leading-snug">
             Mật độ đạt trên 85%. Tỷ lệ trùng ca cao, dễ phải chờ chuyển giao máy.
           </p>
         </div>
@@ -238,14 +238,14 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
               <Sparkles className="w-4 h-4 text-emerald-600" />
               <span>Khung Giờ Vàng</span>
             </span>
-            <span className="px-1.5 py-0.5 rounded-md bg-emerald-200/80 text-emerald-900 text-[10px] uppercase tracking-wider font-extrabold">
+            <span className="px-1.5 py-0.5 rounded-md bg-emerald-200/80 text-emerald-900 text-xs uppercase tracking-wider font-extrabold">
               Khuyên Dùng
             </span>
           </div>
           <div className="text-base sm:text-lg font-bold font-mono text-emerald-900">
             11:30 - 13:30 & 07:30 - 09:00
           </div>
-          <p className="text-[11px] text-emerald-700 leading-snug">
+          <p className="text-xs text-emerald-700 leading-snug">
             Mật độ dưới 25%. Máy hầu như luôn rảnh, đo mẫu nhanh chóng không chờ đợi.
           </p>
         </div>
@@ -259,7 +259,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
           <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
             {forecast.overallCongestionRate}% <span className="text-xs font-normal text-slate-400">thời lượng</span>
           </div>
-          <p className="text-[11px] text-slate-500 leading-snug">
+          <p className="text-xs text-slate-500 leading-snug">
             Có {forecast.peakHours.length} khung giờ trong ngày có mật độ &gt; 65%.
           </p>
         </div>
@@ -280,7 +280,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
               <span className="text-emerald-600 font-mono font-bold">{forecast.quietestDayName}</span>
             </div>
           </div>
-          <p className="text-[11px] text-slate-400 leading-snug">
+          <p className="text-xs text-slate-400 leading-snug">
             Đề xuất nghiên cứu chuyên sâu vào {forecast.quietestDayName}.
           </p>
         </div>
@@ -340,7 +340,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
                       {/* Top Density Percentage Tooltip Indicator */}
                       <div className="mb-1 text-center">
                         <span
-                          className={`inline-block px-1 sm:px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold border transition-all ${
+                          className={`inline-block px-1 sm:px-1.5 py-0.5 rounded-md text-xs font-mono font-bold border transition-all ${
                             isSelected
                               ? 'ring-2 ring-indigo-500 shadow-xs ' + badgeBg
                               : isPeak
@@ -367,7 +367,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
                       {/* Hour Label */}
                       <div className="mt-2 text-center">
                         <span
-                          className={`block font-mono text-[10px] sm:text-[11px] font-semibold tracking-tight transition-colors ${
+                          className={`block font-mono text-xs sm:text-xs font-semibold tracking-tight transition-colors ${
                             isSelected
                               ? 'text-indigo-600 font-bold scale-110'
                               : isPeak
@@ -404,7 +404,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
                         <span>Khung giờ: {selectedSlot.fullLabel}</span>
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
                             selectedSlot.trafficLevel === 'peak'
                               ? 'bg-rose-100 text-rose-800'
                               : selectedSlot.trafficLevel === 'high'
@@ -436,25 +436,25 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   <div className="space-y-1">
-                    <span className="text-slate-500 text-[11px]">Đánh giá & Khuyến nghị:</span>
+                    <span className="text-slate-500 text-xs">Đánh giá & Khuyến nghị:</span>
                     <p className={`font-medium ${selectedSlot.trafficLevel === 'peak' ? 'text-rose-700 font-semibold' : 'text-slate-800'}`}>
                       {selectedSlot.advice}
                     </p>
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-slate-500 text-[11px]">Số lượt đăng ký ghi nhận:</span>
+                    <span className="text-slate-500 text-xs">Số lượt đăng ký ghi nhận:</span>
                     <p className="font-mono font-bold text-slate-900">
                       {selectedSlot.totalBookingCount} ca <span className="font-normal text-slate-500">({Math.round(selectedSlot.totalBookingMinutes / 60)}h thời gian máy chạy)</span>
                     </p>
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-slate-500 text-[11px]">Thiết bị hay sử dụng nhất:</span>
+                    <span className="text-slate-500 text-xs">Thiết bị hay sử dụng nhất:</span>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {selectedSlot.topEquipmentCodes.length > 0 ? (
                         selectedSlot.topEquipmentCodes.map((code) => (
-                          <span key={code} className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono font-semibold text-[11px]">
+                          <span key={code} className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono font-semibold text-xs">
                             {code}
                           </span>
                         ))
@@ -490,7 +490,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
             <div className="overflow-x-auto pb-2">
               <div className="min-w-[640px] space-y-1.5">
                 {/* Header Hours */}
-                <div className="grid grid-cols-16 gap-1 text-center font-mono text-[10px] text-slate-400 font-bold mb-1">
+                <div className="grid grid-cols-16 gap-1 text-center font-mono text-xs text-slate-400 font-bold mb-1">
                   <div className="text-left pl-2">Thứ</div>
                   {forecast.heatMatrix[0].map((c) => (
                     <div key={c.hour}>{c.hour}h</div>
@@ -526,7 +526,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
                               setActiveSelectedHour(cell.hour);
                               setViewMode('bar_chart');
                             }}
-                            className={`h-7 rounded-md cursor-pointer flex items-center justify-center text-[10px] font-mono transition-transform hover:scale-110 shadow-2xs ${cellBg}`}
+                            className={`h-7 rounded-md cursor-pointer flex items-center justify-center text-xs font-mono transition-transform hover:scale-110 shadow-2xs ${cellBg}`}
                           >
                             {cell.density > 0 ? `${cell.density}%` : '—'}
                           </div>
@@ -563,7 +563,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
                     {win.badge}
                   </span>
                   <span className="text-xs font-mono font-bold text-emerald-600 flex items-center gap-1">
@@ -581,11 +581,11 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
                   </p>
                 </div>
 
-                <p className="text-[11px] text-slate-500 leading-relaxed">
+                <p className="text-xs text-slate-500 leading-relaxed">
                   {win.description}
                 </p>
 
-                <div className="pt-1 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                <div className="pt-1 text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">
                   <strong className="text-slate-800">Tối ưu cho:</strong> {win.bestSuitedFor}
                 </div>
               </div>
@@ -612,7 +612,7 @@ export const HourlyUsageDensityChart: React.FC<HourlyUsageDensityChartProps> = (
               <h5 className="font-bold text-indigo-200">
                 Chi Lược Đặt Lịch Thông Minh Dành Cho Nhà Nghiên Cứu
               </h5>
-              <p className="text-slate-300 leading-relaxed text-[11px]">
+              <p className="text-slate-300 leading-relaxed text-xs">
                 {forecast.smartAdviceText}
               </p>
             </div>

@@ -239,7 +239,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                   <strong className="font-mono text-slate-900">{selectedDate}</strong>
                 </span>
               </div>
-              <div className="flex items-center gap-4 text-slate-500 text-[11px]">
+              <div className="flex items-center gap-4 text-slate-500 text-xs">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-xs bg-emerald-100 border border-emerald-300 inline-block" />
                   Khung giờ trống (Nhấp để đặt)
@@ -282,7 +282,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                             {eq.code}
                           </span>
                           <span
-                            className={`text-[10px] px-1.5 py-0.2 rounded-sm font-medium ${
+                            className={`text-xs px-1.5 py-0.2 rounded-sm font-medium ${
                               isMaintenance
                                 ? 'bg-rose-50 text-rose-700 border border-rose-200'
                                 : eq.status === 'in_use'
@@ -296,7 +296,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                         <h4 className="text-xs font-semibold text-slate-900 mt-0.5 line-clamp-1" title={eq.name}>
                           {eq.name}
                         </h4>
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1">
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3 h-3 text-slate-400" />
                             {eq.room}
@@ -309,7 +309,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                         <button
                           type="button"
                           onClick={() => onOpenQuickNotes && onOpenQuickNotes(eq.id)}
-                          className="mt-1.5 text-[11px] font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 hover:underline"
+                          className="mt-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 hover:underline"
                           title="Xem các ghi chú cấu hình máy của đồng nghiệp"
                         >
                           <StickyNote className="w-3 h-3 text-blue-500" />
@@ -346,15 +346,15 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                                   return (
                                     <div
                                       key={slotTime}
-                                      className={`h-9 rounded-sm p-1 text-[10px] flex flex-col justify-between overflow-hidden shadow-2xs ${
+                                      className={`h-9 rounded-sm p-1 text-xs flex flex-col justify-between overflow-hidden shadow-2xs ${
                                         isActiveRun ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white'
                                       }`}
                                       title={`${overlappingBooking.startTime}-${overlappingBooking.endTime}: ${user?.name} (${overlappingBooking.purpose})`}
                                     >
-                                      <div className="font-mono text-[9px] font-bold truncate leading-tight">
+                                      <div className="font-mono text-xs font-bold truncate leading-tight">
                                         {slotTime}
                                       </div>
-                                      <div className="truncate text-[9px] font-medium leading-tight">
+                                      <div className="truncate text-xs font-medium leading-tight">
                                         {user?.name.split(' ').pop() || 'Đã đặt'}
                                       </div>
                                     </div>
@@ -365,13 +365,13 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                                   <button
                                     key={slotTime}
                                     onClick={() => onOpenBookingModal(eq.id)}
-                                    className="h-9 rounded-sm p-1 text-[10px] bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 transition-colors flex flex-col justify-between group cursor-pointer"
+                                    className="h-9 rounded-sm p-1 text-xs bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 transition-colors flex flex-col justify-between group cursor-pointer"
                                     title={`Khung ${slotTime} còn trống. Nhấp để đăng ký.`}
                                   >
-                                    <span className="font-mono text-[9px] text-slate-400 group-hover:text-blue-600">
+                                    <span className="font-mono text-xs text-slate-400 group-hover:text-blue-600">
                                       {slotTime}
                                     </span>
-                                    <span className="text-[9px] text-emerald-600 opacity-0 group-hover:opacity-100 font-semibold truncate">
+                                    <span className="text-xs text-emerald-600 opacity-0 group-hover:opacity-100 font-semibold truncate">
                                       + Đặt
                                     </span>
                                   </button>
@@ -381,7 +381,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
 
                             {/* Bookings details text list under equipment if any */}
                             {eqBookings.length > 0 && (
-                              <div className="flex items-center gap-3 overflow-x-auto text-[11px] text-slate-600 pt-0.5">
+                              <div className="flex items-center gap-3 overflow-x-auto text-xs text-slate-600 pt-0.5">
                                 <span className="text-slate-400 shrink-0 font-medium">Phiên trong ngày:</span>
                                 {eqBookings.map((b) => {
                                   const u = userMap.get(b.userId);
@@ -396,12 +396,12 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                                       </span>
                                       <span className="text-slate-500">({u?.name})</span>
                                       {b.projectCode && (
-                                        <span className="text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-1 py-0.2 rounded font-mono font-medium">
+                                        <span className="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-1 py-0.2 rounded font-mono font-medium">
                                           {b.projectCode}
                                         </span>
                                       )}
                                       {isCurrentUser && (
-                                        <span className="text-[10px] text-blue-600 font-bold">(Bạn)</span>
+                                        <span className="text-xs text-blue-600 font-bold">(Bạn)</span>
                                       )}
                                     </span>
                                   );
@@ -485,7 +485,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                           <span>·</span>
                           <span className="font-mono font-medium text-slate-800">{b.date}</span>
                           {isToday && (
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">
+                            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">
                               Hôm nay
                             </span>
                           )}
@@ -493,7 +493,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                       </div>
 
                       <span
-                        className={`text-[11px] px-2 py-0.5 rounded font-medium shrink-0 ${
+                        className={`text-xs px-2 py-0.5 rounded font-medium shrink-0 ${
                           isActive
                             ? 'bg-amber-100 text-amber-800'
                             : isConfirmed
@@ -521,14 +521,14 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                           {b.startTime} - {b.endTime}
                         </span>
                         {b.projectCode && (
-                          <span className="text-[10px] bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded border border-indigo-200 inline-flex items-center gap-1 font-mono">
+                          <span className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded border border-indigo-200 inline-flex items-center gap-1 font-mono">
                             <FolderGit2 className="w-3 h-3 text-indigo-600" />
                             {b.projectCode}
                           </span>
                         )}
                         {b.plannedSupplies && b.plannedSupplies.length > 0 && (
                           <span 
-                            className="text-[10px] bg-amber-50 text-amber-700 font-medium px-2 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1"
+                            className="text-xs bg-amber-50 text-amber-700 font-medium px-2 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1"
                             title={b.plannedSupplies.map((s) => `${s.supplyName} (${s.quantity} ${s.unit})`).join(', ')}
                           >
                             <Package className="w-3 h-3 text-amber-600" />
@@ -541,7 +541,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                         {b.purpose}
                       </div>
                       {b.notes && (
-                        <div className="text-slate-500 text-[11px] italic">
+                        <div className="text-slate-500 text-xs italic">
                           Ghi chú: {b.notes}
                         </div>
                       )}
@@ -549,7 +549,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
 
                     {/* Actions: Check-in / Cancel */}
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                      <div className="text-[11px] text-slate-400">
+                      <div className="text-xs text-slate-400">
                         Mã: <span className="font-mono">{b.id}</span>
                       </div>
 

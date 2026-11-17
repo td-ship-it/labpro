@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Equipment, User, Booking, UsageLog } from '../types';
 import { LabStorage, localDateStr } from '../services/storage';
 import { PdfReportModal } from './PdfReportModal';
+import { EfficiencyFormModal } from './EfficiencyFormModal';
+import { USAGE_EXPORT_FIELDS, loadUsageFieldPrefs, saveUsageFieldPrefs } from '../services/usageExport';
 import { MaintenanceForecastView } from './MaintenanceForecastView';
 import { HourlyUsageDensityChart } from './HourlyUsageDensityChart';
 import { 
@@ -60,6 +62,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const [startDate, setStartDate] = useState<string>(firstDayOfMonth);
   const [endDate, setEndDate] = useState<string>(today);
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>('all');
+  const [showExportFields, setShowExportFields] = useState<boolean>(false);
+  const [showEfficiency, setShowEfficiency] = useState<boolean>(false);
+  const [exportFields, setExportFields] = useState<string[]>(() => loadUsageFieldPrefs());
   const [isPdfModalOpen, setIsPdfModalOpen] = useState<boolean>(false);
 
   // Quick Date Range Presets
@@ -182,7 +187,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const deptEntries = Object.entries(departmentCounts).sort((a, b) => b[1] - a[1]);
 
   // Export handlers
-  const handleExportFilteredCSV = () => {
+  // Mở bảng chọn trường xuất; người dùng chọn xong mới tải file
+  const handleExportFilteredCSV = () => setShowExportFields(true);
+
+  const confirmExportFilteredCSV = () => {
+    const keys = USAGE_EXPORT_FIELDS.map((f) => f.key).filter((k) => exportFields.includes(k));
+    if (!keys.length) return;
+    saveUsageFieldPrefs(keys);
     LabStorage.exportFilteredReportToCSV({
       startDate,
       endDate,
@@ -190,7 +201,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       logs,
       equipmentList,
       users: allUsers,
+      fields: keys,
     });
+    setShowExportFields(false);
   };
 
   return (
@@ -232,6 +245,16 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
               <span>Xuất File Excel (.csv)</span>
             </button>
+
+            <button
+              onClick={() => setShowEfficiency(true)}
+              disabled={selectedEquipmentId === 'all'}
+              title={selectedEquipmentId === 'all' ? 'Chọn một thiết bị trước' : 'Lập bảng đánh giá hiệu quả sử dụng'}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg shadow-2xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileText className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Bảng đánh giá hiệu quả</span>
+            </button>
           </div>
         )}
       </div>
@@ -260,7 +283,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         >
           <Clock className="w-4 h-4 text-emerald-400" />
           <span>Dự Báo Mật Độ Theo Giờ</span>
-          <span className="px-1.5 py-0.5 rounded-md bg-emerald-400 text-slate-950 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-0.5">
+          <span className="px-1.5 py-0.5 rounded-md bg-emerald-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider flex items-center gap-0.5">
             <Flame className="w-2.5 h-2.5 text-rose-700" /> Tránh Cao Điểm
           </span>
         </button>
@@ -275,7 +298,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         >
           <Wrench className="w-4 h-4 text-amber-400" />
           <span>Dự Báo Lịch Bảo Trì & Kiểm Định</span>
-          <span className="px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-0.5">
+          <span className="px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider flex items-center gap-0.5">
             <Sparkles className="w-2.5 h-2.5" /> Thuật Toán
           </span>
         </button>
@@ -313,7 +336,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
 
           {/* Presets */}
-          <div className="flex items-center gap-1 text-[11px] font-medium text-slate-600">
+          <div className="flex items-center gap-1 text-xs font-medium text-slate-600">
             <span className="text-slate-400 mr-1">Khoảng nhanh:</span>
             <button
               onClick={() => handleSetPreset('7days')}
@@ -399,7 +422,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             Đang lọc: <strong className="text-slate-800">{selectedEquipment ? `[${selectedEquipment.code}] ${selectedEquipment.name}` : 'Tất cả thiết bị'}</strong> · Từ <span className="font-mono">{startDate || 'đầu'}</span> đến <span className="font-mono">{endDate || 'nay'}</span>
           </div>
 
-          <div className="text-[11px] text-blue-700 font-medium">
+          <div className="text-xs text-blue-700 font-medium">
             Khớp {filteredSessionsCount} ca vận hành & {filteredBookingsCount} lịch đăng ký
           </div>
         </div>
@@ -416,7 +439,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
             {filteredBookingsCount} <span className="text-xs font-normal text-slate-400">phiên</span>
           </div>
-          <div className="text-[11px] text-emerald-600 flex items-center gap-1">
+          <div className="text-xs text-emerald-600 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
             <span>Thực tế vận hành: {filteredSessionsCount} ca</span>
           </div>
@@ -431,7 +454,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
             {filteredHours} <span className="text-xs font-normal text-slate-400">giờ</span>
           </div>
-          <div className="text-[11px] text-slate-500">
+          <div className="text-xs text-slate-500">
             {filteredMinutes} phút chạy thực tế
           </div>
         </div>
@@ -445,7 +468,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
             {filteredSamples} <span className="text-xs font-normal text-slate-400">mẫu</span>
           </div>
-          <div className="text-[11px] text-slate-500">
+          <div className="text-xs text-slate-500">
             {selectedEquipment ? `Trên máy ${selectedEquipment.code}` : 'Toàn bộ các máy'}
           </div>
         </div>
@@ -459,7 +482,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
             {filteredMaterialCostVND > 0 ? (filteredMaterialCostVND / 1000000).toFixed(1) : '0'} <span className="text-xs font-normal text-slate-400">tr đ</span>
           </div>
-          <div className="text-[11px] text-slate-500 truncate" title={`${filteredMaterialCostVND.toLocaleString('vi-VN')} VND`}>
+          <div className="text-xs text-slate-500 truncate" title={`${filteredMaterialCostVND.toLocaleString('vi-VN')} VND`}>
             {filteredMaterialCostVND.toLocaleString('vi-VN')} VND
           </div>
         </div>
@@ -473,7 +496,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <div className={`text-2xl font-bold font-mono tabular-nums ${filteredIncidents > 0 ? 'text-amber-700' : 'text-slate-900'}`}>
             {filteredIncidents} <span className="text-xs font-normal text-slate-400">vụ việc</span>
           </div>
-          <div className="text-[11px] text-slate-500">
+          <div className="text-xs text-slate-500">
             {filteredIncidents === 0 ? 'Vận hành ổn định' : 'Cần bảo trì kỹ thuật'}
           </div>
         </div>
@@ -531,7 +554,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 font-mono text-[11px] text-slate-600">
+                    <div className="flex items-center gap-3 font-mono text-xs text-slate-600">
                       <span><strong>{stat.bookingCount}</strong> lượt</span>
                       <span>·</span>
                       <span>{stat.hours}h</span>
@@ -611,7 +634,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   Tổng hợp chi phí thực tế theo đề tài nghiên cứu
                 </p>
               </div>
-              <span className="text-[11px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+              <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
                 {projectStats.length} đề tài
               </span>
             </div>
@@ -632,7 +655,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                         <span className="font-mono font-bold text-slate-800">
                           {p.code}
                         </span>
-                        <div className="flex items-center gap-2 font-mono text-[11px]">
+                        <div className="flex items-center gap-2 font-mono text-xs">
                           <span className="text-slate-500">{p.bookingCount} ca ({p.hours}h)</span>
                           <span className="font-semibold text-emerald-700">
                             {p.costVND.toLocaleString('vi-VN')} đ
@@ -685,6 +708,47 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
       </div>
       </>
+    )}
+
+    <EfficiencyFormModal
+      isOpen={showEfficiency}
+      onClose={() => setShowEfficiency(false)}
+      equipment={selectedEquipmentId !== 'all' ? equipmentList.find((e) => e.id === selectedEquipmentId) || null : null}
+      logs={logs}
+      startDate={startDate}
+      endDate={endDate}
+    />
+
+    {/* Chọn trường thông tin khi xuất Excel */}
+    {showExportFields && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4 border border-slate-200">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Chọn trường thông tin cần xuất</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Mỗi trường được xuất thành một cột riêng trong file Excel. Lựa chọn được lưu cho lần sau.</p>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            <button type="button" onClick={() => setExportFields(USAGE_EXPORT_FIELDS.map((f) => f.key))} className="font-semibold text-blue-700 hover:underline">Chọn tất cả</button>
+            <button type="button" onClick={() => setExportFields([])} className="font-semibold text-slate-600 hover:underline">Bỏ chọn tất cả</button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-72 overflow-y-auto">
+            {USAGE_EXPORT_FIELDS.filter((f) => f.key !== 'stt').map((f) => (
+              <label key={f.key} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 text-xs text-slate-800 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes(f.key)}
+                  onChange={(e) => setExportFields(e.target.checked ? [...exportFields, f.key] : exportFields.filter((k) => k !== f.key))}
+                />
+                <span>{f.label}</span>
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <button type="button" onClick={() => setShowExportFields(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Hủy</button>
+            <button type="button" disabled={exportFields.length === 0} onClick={confirmExportFilteredCSV} className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg">Tải file Excel</button>
+          </div>
+        </div>
+      </div>
     )}
 
     {/* PDF Report Preview and Print Modal */}

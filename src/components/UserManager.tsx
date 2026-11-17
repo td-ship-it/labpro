@@ -74,21 +74,21 @@ export const UserManager: React.FC<UserManagerProps> = ({
     switch (role) {
       case 'admin':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-sm border border-indigo-200">
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-sm border border-indigo-200">
             <ShieldCheck className="w-3.5 h-3.5" />
             Quản trị viên
           </span>
         );
       case 'instructor':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-sm border border-emerald-200">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-sm border border-emerald-200">
             <GraduationCap className="w-3.5 h-3.5" />
             Giảng viên
           </span>
         );
       case 'researcher':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-sm border border-blue-200">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-sm border border-blue-200">
             <Microscope className="w-3.5 h-3.5" />
             Nghiên cứu viên
           </span>
@@ -184,7 +184,7 @@ export const UserManager: React.FC<UserManagerProps> = ({
             <Users className="w-4 h-4 text-blue-600" />
             <span>Danh Sách Người Được Phép Đăng Ký ({filteredUsers.length} tài khoản)</span>
           </div>
-          <span className="text-slate-500 text-[11px]">
+          <span className="text-slate-500 text-xs">
             Đang hoạt động: {allUsers.filter((u) => u.status === 'active').length} / Tạm khóa: {allUsers.filter((u) => u.status === 'suspended').length}
           </span>
         </div>
@@ -229,12 +229,12 @@ export const UserManager: React.FC<UserManagerProps> = ({
                             <div className="font-bold text-slate-900 flex items-center gap-1.5">
                               <span>{u.name}</span>
                               {isCurrent && (
-                                <span className="text-[10px] text-blue-600 bg-blue-50 px-1 py-0.2 rounded font-semibold border border-blue-200">
+                                <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.2 rounded font-semibold border border-blue-200">
                                   Bạn
                                 </span>
                               )}
                             </div>
-                            <span className="text-[11px] text-slate-500">
+                            <span className="text-xs text-slate-500">
                               {u.title}
                             </span>
                           </div>
@@ -252,11 +252,11 @@ export const UserManager: React.FC<UserManagerProps> = ({
                       </td>
 
                       <td className="py-3 px-4 space-y-0.5">
-                        <div className="flex items-center gap-1.5 text-slate-600 font-mono text-[11px]">
+                        <div className="flex items-center gap-1.5 text-slate-600 font-mono text-xs">
                           <Mail className="w-3 h-3 text-slate-400" />
                           <span>{u.email}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-slate-500 font-mono text-[11px]">
+                        <div className="flex items-center gap-1.5 text-slate-500 font-mono text-xs">
                           <Phone className="w-3 h-3 text-slate-400" />
                           <span>{u.phone}</span>
                         </div>
@@ -264,7 +264,7 @@ export const UserManager: React.FC<UserManagerProps> = ({
 
                       <td className="py-3 px-4">
                         <span
-                          className={`text-[11px] px-2 py-0.5 rounded-sm font-semibold inline-flex items-center gap-1 ${
+                          className={`text-xs px-2 py-0.5 rounded-sm font-semibold inline-flex items-center gap-1 ${
                             isActive
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                               : 'bg-slate-100 text-slate-600 border border-slate-200'

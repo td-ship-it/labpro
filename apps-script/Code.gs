@@ -37,9 +37,9 @@ var SCHEMA = {
     sheet: 'ThietBi',
     cols: ['id', 'code', 'name', 'category', 'room', 'building', 'status', 'manufacturer', 'model', 'specs', 'safetyGuidelines',
       'maxBookingHoursPerSession', 'maintenanceSchedule', 'responsibleStaff', 'sopTitle', 'sopDocCode', 'sopSteps', 'videoTutorial',
-      'manualDocName', 'quickChecklist', 'emergencyContact', 'maintenanceConfig', 'lastMaintenanceDate'],
+      'manualDocName', 'quickChecklist', 'emergencyContact', 'maintenanceConfig', 'lastMaintenanceDate', 'trainedUserIds'],
     num: ['maxBookingHoursPerSession'],
-    json: ['sopSteps', 'videoTutorial', 'quickChecklist', 'maintenanceConfig'],
+    json: ['sopSteps', 'videoTutorial', 'quickChecklist', 'maintenanceConfig', 'trainedUserIds'],
   },
   bookings: {
     sheet: 'LichDat',
@@ -79,7 +79,7 @@ var SCHEMA = {
   projects: {
     sheet: 'DeTai',
     cols: ['id', 'code', 'name', 'principalInvestigator', 'piEmail', 'department', 'fundingAgency', 'startDate', 'endDate',
-      'budgetTotalVND', 'materialBudgetVND', 'status', 'colorTag', 'description', 'createdAt', 'createdBy'],
+      'budgetTotalVND', 'materialBudgetVND', 'status', 'colorTag', 'description', 'createdAt', 'createdBy', 'leadAgency'],
     num: ['budgetTotalVND', 'materialBudgetVND'],
   },
   supplies: {
@@ -826,13 +826,12 @@ function register_(ctx) {
   upsert_('users', user);
   audit_(user, 'Tự đăng ký tài khoản', role + ' · ' + user.department + (mode === 'open' ? '' : ' · chờ kích hoạt'));
 
-  admins_().forEach(function (a) {
-    queueMail_(a.email, '[' + APP + '] Tài khoản mới đăng ký: ' + user.name,
-      'Có tài khoản mới vừa đăng ký trên hệ thống.',
-      ['Họ tên: ' + user.title + ' ' + user.name, 'Email: ' + user.email, 'Đơn vị: ' + user.department, 'Điện thoại: ' + user.phone,
-        mode === 'open' ? 'Tài khoản đã được kích hoạt tự động.' : 'Tài khoản đang CHỜ KÍCH HOẠT. Vào mục Người dùng để mở khóa nếu hợp lệ.'],
-      'Mở trang quản trị');
-  });
+  notifyAdmins_(user.id, 'new_user', '[' + APP + '] Tài khoản mới đăng ký: ' + user.name,
+    'Có tài khoản mới vừa đăng ký trên hệ thống.',
+    ['Họ tên: ' + user.name, 'Email: ' + user.email, 'Vai trò: ' + (role === 'instructor' ? 'Giảng viên' : 'Trợ giảng/KTV bộ môn Bào chế'),
+      'Đơn vị: ' + user.department, 'Điện thoại: ' + user.phone,
+      mode === 'open' ? 'Tài khoản đã được kích hoạt tự động.' : 'Tài khoản đang CHỜ KÍCH HOẠT. Vào mục Người dùng để mở khóa nếu hợp lệ.'],
+    null, null, 'Mở trang quản trị');
 
   if (user.status !== 'active') return { pending: true };
   var out = bootstrap_(user);
@@ -932,6 +931,25 @@ function bootstrap_(user) {
 /* ============================================================================
  * 8. ĐẶT LỊCH
  * ========================================================================== */
+/** Chỉ Admin hoặc người có tên trong danh sách đã tập huấn của thiết bị mới được đặt / sử dụng máy. */
+function canUseEquipment_(user, eq) {
+  if (isAdmin_(user)) return true;
+  return (eq.trainedUserIds || []).indexOf(user.id) >= 0;
+}
+
+/** Gửi thông báo cho mọi Admin: vào hộp thư trong ứng dụng và gửi email. */
+function notifyAdmins_(exceptUserId, type, subject, headline, paragraphs, eq, booking, action) {
+  admins_().forEach(function (a) {
+    if (a.id === exceptUserId) return;
+    recordMail_(a, type, subject, booking || null, eq || null, {
+      greeting: 'Kính gửi ' + (a.title ? a.title + ' ' : '') + a.name + ',',
+      headline: headline,
+      contentParagraphs: paragraphs,
+      actionLabel: action || 'Mở hệ thống',
+    });
+  });
+}
+
 function findConflict_(equipmentId, date, start, end, excludeId) {
   var s = toMin_(start), e = toMin_(end);
   var list = all_('bookings');
@@ -996,7 +1014,11 @@ function createBooking_(ctx) {
   var c = findConflict_(eq.id, date, start, end);
   if (c) throw fail_('Khung giờ này đã có ' + userName_(c.userId) + ' đặt (' + c.startTime + ' - ' + c.endTime + '). Vui lòng chọn giờ khác.', 'CONFLICT');
 
+  if (!canUseEquipment_(find_('users', userId) || u, eq)) {
+    throw fail_('Người đăng ký chưa được tập huấn sử dụng thiết bị này. Vui lòng liên hệ Admin để được thêm vào danh sách tập huấn.', 'FORBIDDEN');
+  }
   var project = p.projectId ? find_('projects', p.projectId) : null;
+  if (!project) throw fail_('Vui lòng chọn đề tài nghiên cứu (thông tin bắt buộc) cho lịch đặt.');
   var booking = {
     id: newId_('book'),
     equipmentId: eq.id,
@@ -1015,8 +1037,7 @@ function createBooking_(ctx) {
   upsert_('bookings', booking);
   audit_(u, 'Đặt lịch', '[' + eq.code + '] ' + date + ' ' + start + '-' + end + (userId !== u.id ? ' · đặt hộ ' + userName_(userId) : ''));
 
-  var owner = find_('users', userId);
-  if (owner) mailBookingConfirmed_(booking, eq, owner);
+  // Email xác nhận sẽ gửi tự động trước giờ sử dụng 1 giờ (xem guiNhacLich)
   return { booking: booking };
 }
 
@@ -1088,6 +1109,11 @@ function checkIn_(ctx) {
     else if (c) throw fail_('Khung giờ hiện tại đã được ' + userName_(c.userId) + ' đặt (' + c.startTime + ' - ' + c.endTime + ').');
   }
 
+  var owner = booking ? find_('users', booking.userId) : u;
+  if (!canUseEquipment_(owner || u, eq)) {
+    throw fail_('Người sử dụng chưa được tập huấn sử dụng thiết bị này. Vui lòng liên hệ Admin.', 'FORBIDDEN');
+  }
+
   var project = p.projectId ? find_('projects', p.projectId) : null;
   var log = {
     id: newId_('log'),
@@ -1110,6 +1136,13 @@ function checkIn_(ctx) {
     upsert_('bookings', booking);
   }
   audit_(u, 'Nhận máy (Check-in)', '[' + eq.code + '] tình trạng: ' + log.initialCondition + (booking ? ' · lịch ' + booking.startTime + '-' + booking.endTime : ' · đột xuất'));
+  var who = find_('users', log.userId) || u;
+  notifyAdmins_(u.id, 'checkin_alert', '[' + APP + '] Nhận máy: [' + eq.code + '] ' + who.name,
+    who.name + ' vừa nhận máy [' + eq.code + '] ' + eq.name + '.',
+    ['Thời gian nhận máy: ' + fmt_(now.ms ? new Date(now.ms) : new Date(), 'HH:mm dd/MM/yyyy') + '.',
+     'Lịch: ' + (booking ? booking.date + ' ' + booking.startTime + ' - ' + booking.endTime : 'đột xuất (không có lịch đặt)') + '.',
+     'Tình trạng máy khi nhận: ' + log.initialCondition + '.'],
+    eq, booking, 'Mở nhật ký thiết bị');
   return { log: log };
 }
 
@@ -1168,6 +1201,14 @@ function checkOut_(ctx) {
     (incident.hasIncident ? ' · SỰ CỐ ' + incident.severity + ': ' + incident.description : ''));
 
   if (toMaintenance && eq) mailIncident_(log, eq, u, incident, finalCondition);
+  if (eq) {
+    notifyAdmins_(u.id, 'checkout_alert', '[' + APP + '] Trả máy: [' + eq.code + '] ' + (find_('users', log.userId) || u).name,
+      (find_('users', log.userId) || u).name + ' vừa trả máy [' + eq.code + '] ' + eq.name + '.',
+      ['Thời gian sử dụng: ' + log.durationMinutes + ' phút.',
+       'Tình trạng máy sau sử dụng: ' + finalCondition + '.',
+       incident.hasIncident ? 'Có sự cố (' + incident.severity + '): ' + incident.description : 'Không có sự cố.'],
+      eq, log.bookingId ? find_('bookings', log.bookingId) : null, 'Mở nhật ký thiết bị');
+  }
   return { log: log };
 }
 
@@ -1258,9 +1299,9 @@ function mailBookingConfirmed_(b, eq, user) {
   return recordMail_(user, 'booking_confirmed',
     '✅ [' + APP + '] Xác nhận lịch [' + eq.code + '] ngày ' + b.date + ' (' + b.startTime + ' - ' + b.endTime + ')', b, eq, {
       greeting: 'Kính gửi ' + user.title + ' ' + user.name + ',',
-      headline: 'Lịch đăng ký thiết bị của bạn đã được hệ thống phê duyệt tự động.',
+      headline: 'Lịch sử dụng thiết bị của bạn sẽ bắt đầu sau khoảng 1 giờ nữa. Vui lòng chuẩn bị và đến nhận máy đúng giờ.',
       contentParagraphs: [
-        'Yêu cầu đăng ký đã được kiểm tra và xác nhận lúc ' + fmt_(now, 'HH:mm') + ' ngày ' + fmt_(now, 'dd/MM/yyyy') + '.',
+        'Lịch đăng ký đã được hệ thống xác nhận. Email này được gửi lúc ' + fmt_(now, 'HH:mm') + ' ngày ' + fmt_(now, 'dd/MM/yyyy') + '.',
         'Thiết bị: [' + eq.code + '] ' + eq.name + '.',
         'Thời gian sử dụng: ' + b.startTime + ' đến ' + b.endTime + ' - Ngày ' + b.date + '.',
         'Vị trí: ' + eq.room + ' (' + eq.building + '). Cán bộ phụ trách: ' + (eq.responsibleStaff || '---') + '.',
@@ -1358,16 +1399,27 @@ function guiNhacLich() {
   FRESH = true;
   try {
     var now = now_();
-    var reminded = {};
-    all_('emails').forEach(function (m) { if (m.type === 'upcoming_reminder' && m.bookingId) reminded[m.bookingId] = true; });
+    var reminded = {}, confirmed = {};
+    all_('emails').forEach(function (m) {
+      if (!m.bookingId) return;
+      if (m.type === 'upcoming_reminder') reminded[m.bookingId] = true;
+      if (m.type === 'booking_confirmed') confirmed[m.bookingId] = true;
+    });
     all_('bookings').forEach(function (b) {
-      if (b.status !== 'confirmed' || b.date !== now.date || reminded[b.id]) return;
+      if (b.status !== 'confirmed' || b.date !== now.date) return;
       var diff = toMin_(b.startTime) - now.min;
-      if (diff < 0 || diff > 45) return;
-      var eq = find_('equipment', b.equipmentId);
-      var user = find_('users', b.userId);
+      var eq = null, user = null;
+      // Email xác nhận: gửi khi còn tối đa 60 phút tới giờ sử dụng
+      if (!confirmed[b.id] && diff >= 0 && diff <= 60) {
+        eq = find_('equipment', b.equipmentId); user = find_('users', b.userId);
+        if (eq && user && user.status === 'active') { mailBookingConfirmed_(b, eq, user); confirmed[b.id] = true; }
+      }
+      // Email nhắc ngay trước giờ sử dụng
+      if (reminded[b.id] || diff < 0 || diff > 45) return;
+      eq = eq || find_('equipment', b.equipmentId); user = user || find_('users', b.userId);
       if (eq && user && user.status === 'active') mailReminder_(b, eq, user, diff);
     });
+    autoCheckOut_(now);
   } finally {
     try {
       commitWrites_();
@@ -1377,6 +1429,41 @@ function guiNhacLich() {
     }
     sendOutbox_();
   }
+}
+
+/** Hết ca đã đăng ký mà người dùng chưa trả máy: hệ thống tự check-out và ghi chú vào nhật ký. */
+function autoCheckOut_(now) {
+  all_('logs').forEach(function (log) {
+    try {
+      if (log.checkOutTime || !log.bookingId) return;
+      var b = find_('bookings', log.bookingId);
+      if (!b || b.status !== 'active') return;
+      var endMs = new Date(b.date + 'T' + b.endTime + ':00+07:00').getTime();
+      if (!(endMs <= now.ms)) return;
+      var eq = find_('equipment', log.equipmentId);
+      var checkInMs = new Date(log.checkInTime).getTime();
+      var endIso = new Date(endMs).toISOString();
+      log.checkOutTime = endIso;
+      log.durationMinutes = Math.max(1, Math.round((endMs - checkInMs) / 60000));
+      log.finalCondition = log.initialCondition || 'good';
+      var note = '[Tự động check-out] Người sử dụng không trả máy khi hết ca (' + b.endTime + '). Hệ thống tự ghi nhận check-out lúc ' +
+        b.endTime + ' ngày ' + b.date + '. Vui lòng kiểm tra tình trạng máy.';
+      log.operatorNotes = log.operatorNotes ? log.operatorNotes + '\n' + note : note;
+      upsert_('logs', log);
+      b.status = 'completed';
+      upsert_('bookings', b);
+      if (eq && eq.status === 'in_use') { eq.status = 'available'; upsert_('equipment', eq); }
+      audit_(null, 'Tự động check-out', '[' + (eq ? eq.code : log.equipmentId) + '] hết ca ' + b.endTime + ' · ' + b.date);
+      var owner = find_('users', log.userId);
+      notifyAdmins_(null, 'auto_checkout', '[' + APP + '] Tự động check-out: [' + (eq ? eq.code : '') + '] ' + (owner ? owner.name : ''),
+        (owner ? owner.name : 'Người dùng') + ' chưa trả máy khi hết ca, hệ thống đã tự check-out.',
+        ['Ca đăng ký: ' + b.date + ' ' + b.startTime + ' - ' + b.endTime + '.',
+         'Thời lượng ghi nhận: ' + log.durationMinutes + ' phút. Ghi chú đã được lưu vào nhật ký.'],
+        eq, b, 'Mở nhật ký thiết bị');
+    } catch (e) {
+      console.error('Tự check-out thất bại cho nhật ký ' + log.id + ': ' + e);
+    }
+  });
 }
 
 /* ============================================================================
@@ -1504,7 +1591,10 @@ function upsertEquipment_(ctx) {
   eq.status = EQ_STATUS.indexOf(p.status) >= 0 ? p.status : 'available';
   var prev = find_('equipment', eq.id);
   if (prev && prev.status === 'in_use' && openLogFor_(eq.id) && eq.status !== 'in_use' && eq.status !== 'maintenance') eq.status = 'in_use';
-  eq.maxBookingHoursPerSession = num_(p.maxBookingHoursPerSession, 0.5, 24) || 4;
+  eq.maxBookingHoursPerSession = num_(p.maxBookingHoursPerSession, 1, 1e4) || 1;
+  eq.trainedUserIds = Array.isArray(p.trainedUserIds)
+    ? p.trainedUserIds.map(function (x) { return str_(x, 80); }).filter(function (x, i, a) { return x && a.indexOf(x) === i; }).slice(0, 500)
+    : [];
   ['room', 'building', 'manufacturer', 'model', 'responsibleStaff', 'maintenanceSchedule', 'sopTitle', 'sopDocCode', 'manualDocName', 'emergencyContact']
     .forEach(function (k) { if (eq[k] !== undefined) eq[k] = str_(eq[k], 300); });
   ['specs', 'safetyGuidelines'].forEach(function (k) { if (eq[k] !== undefined) eq[k] = str_(eq[k], 5000); });
@@ -1591,9 +1681,11 @@ function upsertProject_(ctx) {
   var p = ctx.payload.project || {};
   var existing = p.id ? find_('projects', p.id) : null;
   if (existing && existing.createdBy !== u.id && !isAdmin_(u)) throw fail_('Chỉ người tạo đề tài hoặc Admin mới sửa được.', 'FORBIDDEN');
-  var code = str_(p.code, 60).toUpperCase();
   var name = str_(p.name, 300);
-  if (!code || !name) throw fail_('Vui lòng nhập mã và tên đề tài.');
+  if (!name) throw fail_('Vui lòng nhập tên đề tài.');
+  var startDate = isDate_(str_(p.startDate, 10)) ? str_(p.startDate, 10) : (existing ? existing.startDate : now_().date);
+  // Mã đề tài: nhập tay hoặc để trống → tự tạo từ chữ cái đầu tên đề tài + năm bắt đầu (vd. NCN-2026)
+  var code = str_(p.code, 60).toUpperCase() || genProjectCode_(name, startDate.slice(0, 4), existing ? existing.id : null);
   var dup = all_('projects').filter(function (x) { return String(x.code).toUpperCase() === code && (!existing || x.id !== existing.id); })[0];
   if (dup) throw fail_('Mã đề tài "' + code + '" đã tồn tại.');
   var proj = existing || { id: str_(p.id, 80) || newId_('proj'), createdAt: now_().iso, createdBy: u.id };
@@ -1604,7 +1696,8 @@ function upsertProject_(ctx) {
   proj.piEmail = optStr_(p.piEmail, 200);
   proj.department = str_(p.department, 200);
   proj.fundingAgency = optStr_(p.fundingAgency, 200);
-  proj.startDate = isDate_(str_(p.startDate, 10)) ? str_(p.startDate, 10) : now_().date;
+  proj.leadAgency = optStr_(p.leadAgency, 200);
+  proj.startDate = startDate;
   proj.endDate = isDate_(str_(p.endDate, 10)) ? str_(p.endDate, 10) : proj.startDate;
   proj.budgetTotalVND = num_(p.budgetTotalVND, 0, 1e14) || 0;
   proj.materialBudgetVND = num_(p.materialBudgetVND, 0, 1e14) || 0;
@@ -1614,6 +1707,16 @@ function upsertProject_(ctx) {
   upsert_('projects', proj);
   audit_(u, existing ? 'Sửa đề tài' : 'Thêm đề tài', proj.code + ' · ' + proj.name);
   return { project: proj };
+}
+
+function genProjectCode_(name, year, exceptId) {
+  var words = normVi_(name).split(' ').filter(function (w) { return w; });
+  var abbr = words.map(function (w) { return w.charAt(0); }).join('').toUpperCase().slice(0, 8) || 'DT';
+  var taken = {};
+  all_('projects').forEach(function (x) { if (x.id !== exceptId) taken[String(x.code).toUpperCase()] = true; });
+  var base = abbr + '-' + year, code = base, k = 2;
+  while (taken[code]) code = base + '-' + (k++);
+  return code;
 }
 
 function deleteProject_(ctx) {

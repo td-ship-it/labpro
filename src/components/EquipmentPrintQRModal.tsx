@@ -381,7 +381,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
             <div>
               <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
                 <span>Tạo & In Mã QR Tem Dán Thiết Bị Thực Tế</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                   Chuẩn ISO 17025
                 </span>
               </h2>
@@ -428,7 +428,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
             >
               <Layers className="w-3.5 h-3.5" />
               <span>In Hàng Loạt Tem (Trang Decal A4)</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+              <span className={`text-xs px-1.5 py-0.2 rounded-full ${
                 mode === 'batch' ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600 font-bold'
               }`}>
                 {batchSelectedIds.length} máy
@@ -489,7 +489,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                       <Sliders className="w-3.5 h-3.5 text-blue-600" />
                       <span>Kích Thước Tem Dán</span>
                     </span>
-                    <span className="text-[11px] text-slate-500 font-mono">
+                    <span className="text-xs text-slate-500 font-mono">
                       {labelSize === 'standard' ? '80 x 50 mm' : labelSize === 'compact' ? '50 x 30 mm' : '100 x 65 mm'}
                     </span>
                   </div>
@@ -505,7 +505,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                       }`}
                     >
                       <span className="text-xs font-bold block">Chuẩn Lab</span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">80 x 50 mm</span>
+                      <span className="text-xs text-slate-500 block mt-0.5">80 x 50 mm</span>
                     </button>
 
                     <button
@@ -518,7 +518,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                       }`}
                     >
                       <span className="text-xs font-bold block">Nhỏ gọn</span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">50 x 30 mm</span>
+                      <span className="text-xs text-slate-500 block mt-0.5">50 x 30 mm</span>
                     </button>
 
                     <button
@@ -531,7 +531,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                       }`}
                     >
                       <span className="text-xs font-bold block">Mở rộng</span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">100 x 65 mm</span>
+                      <span className="text-xs text-slate-500 block mt-0.5">100 x 65 mm</span>
                     </button>
                   </div>
                 </div>
@@ -670,7 +670,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                   <button
                     type="button"
                     onClick={handleCopyLink}
-                    className="w-full py-1.5 px-3 text-[11px] font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full py-1.5 px-3 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedLink ? 'Đã sao chép link quét mã QR!' : 'Sao chép đường dẫn quét mã máy'}</span>
@@ -685,7 +685,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                     <Eye className="w-3.5 h-3.5 text-blue-600" />
                     <span>Xem trước tem dán thực tế (Tỷ lệ hiển thị thực):</span>
                   </span>
-                  <span className="font-mono text-[11px] bg-slate-200 px-2 py-0.5 rounded text-slate-700">
+                  <span className="font-mono text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-700">
                     {labelSize === 'standard' ? '80mm x 50mm' : labelSize === 'compact' ? '50mm x 30mm' : '100mm x 65mm'}
                   </span>
                 </div>
@@ -728,7 +728,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                           <UmpSchoolOfPharmacyLogo size={22} variant="icon" />
                         </div>
                         <div className="text-center min-w-0 flex-1">
-                          <div className="text-[8.5px] font-extrabold uppercase tracking-widest opacity-95 truncate">
+                          <div className="text-xs font-extrabold uppercase tracking-widest opacity-95 truncate">
                             ĐẠI HỌC Y DƯỢC TP.HCM · TRƯỜNG DƯỢC
                           </div>
                           <div className="text-xs sm:text-sm font-black uppercase tracking-tight leading-tight mt-0.5">
@@ -757,7 +757,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                               className={labelSize === 'compact' ? 'w-24 h-24 object-contain' : 'w-28 h-28 object-contain'}
                             />
                           ) : (
-                            <div className="w-28 h-28 flex items-center justify-center bg-slate-100 text-[10px] text-slate-400">
+                            <div className="w-28 h-28 flex items-center justify-center bg-slate-100 text-xs text-slate-400">
                               Đang tạo QR...
                             </div>
                           )}
@@ -766,7 +766,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                         {/* Right: Technical Details */}
                         <div className="min-w-0 flex-1 space-y-1">
                           <div>
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 block">
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
                               Mã tài sản (Code):
                             </span>
                             <span className={`font-mono font-black text-base sm:text-lg leading-tight ${
@@ -781,7 +781,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                           </div>
 
                           <div>
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 block">
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
                               Tên máy:
                             </span>
                             <span className="font-bold text-slate-900 line-clamp-2 text-xs leading-snug">
@@ -789,20 +789,20 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                             </span>
                           </div>
 
-                          <div className="text-[11px] text-slate-600">
+                          <div className="text-xs text-slate-600">
                             <span>Model: <strong>{currentEquipment.model}</strong></span>
                             <span className="mx-1">·</span>
                             <span>{currentEquipment.manufacturer}</span>
                           </div>
 
                           {showLocation && (
-                            <div className="text-[11px] text-slate-800 font-medium">
+                            <div className="text-xs text-slate-800 font-medium">
                               Vị trí: <strong>{currentEquipment.room}</strong> ({currentEquipment.building})
                             </div>
                           )}
 
                           {showDueDate && labelSize !== 'compact' && (
-                            <div className="text-[10px] text-sky-800 font-semibold">
+                            <div className="text-xs text-sky-800 font-semibold">
                               Lịch bảo trì: {currentEquipment.maintenanceSchedule || 'Định kỳ hàng quý'}
                             </div>
                           )}
@@ -810,7 +810,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                       </div>
 
                       {/* Sticker Footer */}
-                      <div className="border-t border-slate-200 bg-slate-50/80 px-3 py-1.5 text-[10px] text-slate-600 flex items-center justify-between">
+                      <div className="border-t border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs text-slate-600 flex items-center justify-between">
                         {showStaff ? (
                           <div className="truncate pr-2">
                             <span>Phụ trách: <strong>{currentEquipment.responsibleStaff}</strong></span>
@@ -890,7 +890,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
 
               {/* Category Quick Filter */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
-                <span className="text-slate-400 text-[11px] font-bold uppercase mr-1">Lọc:</span>
+                <span className="text-slate-400 text-xs font-bold uppercase mr-1">Lọc:</span>
                 <button
                   type="button"
                   onClick={() => setBatchCategoryFilter('all')}
@@ -937,7 +937,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                           : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
                       }`}
                     >
-                      <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${
+                      <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-xs ${
                         isChecked ? 'bg-blue-600 text-white' : 'border border-slate-300 bg-white'
                       }`}>
                         {isChecked && '✓'}
@@ -968,11 +968,11 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                       <div className="text-xs font-black uppercase text-slate-900">
                         DANH MỤC TEM TÀI SẢN & MÃ QR THIẾT BỊ PHÒNG THÍ NGHIỆM
                       </div>
-                      <div className="text-[10px] text-slate-600">
+                      <div className="text-xs text-slate-600">
                         Hệ thống Quản lý Thiết bị Lab · Ngày xuất in: {new Date().toLocaleDateString('vi-VN')}
                       </div>
                     </div>
-                    <div className="text-right text-[10px] text-slate-500 font-mono">
+                    <div className="text-right text-xs text-slate-500 font-mono">
                       Tổng số: {selectedBatchItems.length} tem
                     </div>
                   </div>
@@ -994,7 +994,7 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                                 <div className="text-[7.5px] font-extrabold uppercase tracking-wider truncate">
                                   ĐH Y DƯỢC TP.HCM · TRƯỜNG DƯỢC
                                 </div>
-                                <div className="text-[10px] font-black uppercase tracking-tight leading-tight">
+                                <div className="text-xs font-black uppercase tracking-tight leading-tight">
                                   BỘ MÔN BÀO CHẾ · TEM CHECK-IN
                                 </div>
                               </div>
@@ -1007,33 +1007,33 @@ export const EquipmentPrintQRModal: React.FC<EquipmentPrintQRModalProps> = ({
                                 {qrUrl ? (
                                   <img src={qrUrl} alt={eq.code} className="w-20 h-20 object-contain" />
                                 ) : (
-                                  <div className="w-20 h-20 flex items-center justify-center bg-slate-100 text-[9px] text-slate-400">
+                                  <div className="w-20 h-20 flex items-center justify-center bg-slate-100 text-xs text-slate-400">
                                     QR
                                   </div>
                                 )}
                               </div>
 
-                              <div className="min-w-0 flex-1 space-y-0.5 text-[11px]">
+                              <div className="min-w-0 flex-1 space-y-0.5 text-xs">
                                 <div className="font-mono font-black text-sm text-blue-700 leading-none">
                                   {eq.code}
                                 </div>
                                 <div className="font-bold text-slate-900 line-clamp-1 leading-tight text-xs">
                                   {eq.name}
                                 </div>
-                                <div className="text-[10px] text-slate-600 truncate">
+                                <div className="text-xs text-slate-600 truncate">
                                   {eq.model} ({eq.manufacturer})
                                 </div>
-                                <div className="text-[10px] text-slate-800 font-medium">
+                                <div className="text-xs text-slate-800 font-medium">
                                   Phòng: <strong>{eq.room}</strong>
                                 </div>
-                                <div className="text-[9px] text-slate-500 truncate">
+                                <div className="text-xs text-slate-500 truncate">
                                   Phụ trách: {eq.responsibleStaff}
                                 </div>
                               </div>
                             </div>
 
                             {/* Sticker Footer */}
-                            <div className="border-t border-slate-200 bg-slate-50 px-2 py-0.5 text-[9px] text-slate-600 flex items-center justify-between">
+                            <div className="border-t border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-600 flex items-center justify-between">
                               <span>ISO 17025</span>
                               <span className="font-medium text-slate-700">Quét QR xem SOP & Check-in</span>
                             </div>

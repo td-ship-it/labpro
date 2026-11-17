@@ -104,7 +104,7 @@ export const EmailInboxModal: React.FC<EmailInboxModalProps> = ({
             <div>
               <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <span>Hộp Thư Thông Báo Email Tự Động (Lab Mail Gateway)</span>
-                <span className="text-[11px] font-mono bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">
+                <span className="text-xs font-mono bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">
                   {emails.length} thư đã gửi
                 </span>
               </h3>
@@ -196,19 +196,19 @@ export const EmailInboxModal: React.FC<EmailInboxModalProps> = ({
                       <span className="font-semibold text-slate-900 truncate">
                         {mail.toName}
                       </span>
-                      <span className="font-mono text-[10px] text-slate-400 shrink-0">
+                      <span className="font-mono text-xs text-slate-400 shrink-0">
                         {new Date(mail.sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
                       {isUpcoming ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded shrink-0">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded shrink-0">
                           <Clock className="w-3 h-3 text-amber-600" />
                           Nhắc Giờ
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded shrink-0">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded shrink-0">
                           <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           Xác Nhận
                         </span>
@@ -218,7 +218,7 @@ export const EmailInboxModal: React.FC<EmailInboxModalProps> = ({
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-slate-500 line-clamp-1">
+                    <p className="text-xs text-slate-500 line-clamp-1">
                       {mail.htmlPreview.headline}
                     </p>
                   </div>
@@ -242,12 +242,12 @@ export const EmailInboxModal: React.FC<EmailInboxModalProps> = ({
                         <div className="font-bold text-slate-900">
                           Hệ thống Thông Báo LabLog Pro &lt;no-reply@lab.edu.vn&gt;
                         </div>
-                        <div className="text-[11px] text-slate-500">
+                        <div className="text-xs text-slate-500">
                           Tới: <strong>{activeEmail.toName}</strong> &lt;{activeEmail.toEmail}&gt;
                         </div>
                       </div>
                     </div>
-                    <span className="font-mono text-[11px] text-slate-500">
+                    <span className="font-mono text-xs text-slate-500">
                       {new Date(activeEmail.sentAt).toLocaleString('vi-VN')}
                     </span>
                   </div>
@@ -269,12 +269,12 @@ export const EmailInboxModal: React.FC<EmailInboxModalProps> = ({
                         <span className="font-bold text-sm tracking-tight block">
                           TRUNG TÂM THÍ NGHIỆM & PHÂN TÍCH
                         </span>
-                        <span className="text-[11px] text-slate-400 block font-mono">
+                        <span className="text-xs text-slate-400 block font-mono">
                           Phòng Thí Nghiệm Trọng Điểm Quốc Gia
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded border border-slate-700 text-slate-300">
+                    <span className="text-xs font-mono bg-slate-800 px-2 py-0.5 rounded border border-slate-700 text-slate-300">
                       ISO/IEC 17025
                     </span>
                   </div>
@@ -299,7 +299,7 @@ export const EmailInboxModal: React.FC<EmailInboxModalProps> = ({
 
                     {/* Booking Details Summary Box */}
                     <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2 text-xs">
-                      <div className="font-bold uppercase tracking-wider text-[11px] text-slate-500 border-b border-slate-200 pb-1">
+                      <div className="font-bold uppercase tracking-wider text-xs text-slate-500 border-b border-slate-200 pb-1">
                         Thông Tin Đăng Ký Đã Ghi Nhận
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-slate-700">
@@ -345,7 +345,7 @@ export const EmailInboxModal: React.FC<EmailInboxModalProps> = ({
                   </div>
 
                   {/* Institutional Email Footer */}
-                  <div className="p-4 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-400 space-y-1">
+                  <div className="p-4 bg-slate-50 border-t border-slate-200 text-xs text-slate-400 space-y-1">
                     <p>
                       Email này được gửi tự động từ Hệ thống Quản lý Thiết bị LabLog Pro. Vui lòng không trả lời trực tiếp email này.
                     </p>

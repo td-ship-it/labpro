@@ -179,7 +179,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                 <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">
                   {equipment.code}
                 </span>
-                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                   equipment.status === 'available'
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     : equipment.status === 'in_use'
@@ -238,7 +238,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
             <FileText className="w-3.5 h-3.5" />
             <span>Quy Trình Chuẩn (SOP)</span>
             {equipment.sopSteps && (
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+              <span className={`text-xs px-1.5 py-0.2 rounded-full ${
                 activeTab === 'sop' ? 'bg-blue-700 text-white' : 'bg-slate-200 text-slate-700'
               }`}>
                 {equipment.sopSteps.length}
@@ -257,7 +257,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
             <Video className="w-3.5 h-3.5" />
             <span>Video Thực Hành</span>
             {equipment.videoTutorial && (
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+              <span className={`text-xs px-1.5 py-0.2 rounded-full ${
                 activeTab === 'video' ? 'bg-blue-700 text-white' : 'bg-slate-200 text-slate-700'
               }`}>
                 {equipment.videoTutorial.duration}
@@ -353,7 +353,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                   </button>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-100 w-full text-left text-[11px] text-slate-500 space-y-1">
+                <div className="mt-4 pt-3 border-t border-slate-100 w-full text-left text-xs text-slate-500 space-y-1">
                   <div className="flex justify-between">
                     <span>Model:</span>
                     <strong className="text-slate-700">{equipment.model}</strong>
@@ -376,7 +376,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-5 text-white shadow-md">
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-semibold tracking-wide uppercase">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 text-white text-xs font-semibold tracking-wide uppercase">
                         <Sparkles className="w-3 h-3" /> Quét Thẻ Thiết Bị Tại Chỗ
                       </span>
                       <h3 className="text-base font-bold mt-1.5 text-white">
@@ -468,7 +468,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                       <FileText className="w-4 h-4" />
                     </div>
                     <div className="font-semibold text-xs text-slate-900">Quy Trình SOP</div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {equipment.sopSteps ? `${equipment.sopSteps.length} bước tiêu chuẩn` : 'Hướng dẫn đo'}
                     </p>
                   </div>
@@ -481,7 +481,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                       <Video className="w-4 h-4" />
                     </div>
                     <div className="font-semibold text-xs text-slate-900">Video Thực Hành</div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {equipment.videoTutorial ? `${equipment.videoTutorial.duration} clip mẫu` : 'Xem video'}
                     </p>
                   </div>
@@ -494,7 +494,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                       <StickyNote className="w-4 h-4" />
                     </div>
                     <div className="font-semibold text-xs text-slate-900">Quick Notes</div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {quickNotes.length} cấu hình chia sẻ
                     </p>
                   </div>
@@ -575,7 +575,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                             {step.title}
                           </h4>
                           {step.durationEstimate && (
-                            <span className="text-[11px] font-mono text-slate-500 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded">
+                            <span className="text-xs font-mono text-slate-500 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded">
                               <Clock className="w-3 h-3 text-slate-400" />
                               {step.durationEstimate}
                             </span>
@@ -587,7 +587,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                         </p>
 
                         {step.warning && (
-                          <div className="mt-2.5 p-2 bg-rose-50 border border-rose-200 rounded-md text-[11px] text-rose-800 flex items-start gap-1.5 font-medium">
+                          <div className="mt-2.5 p-2 bg-rose-50 border border-rose-200 rounded-md text-xs text-rose-800 flex items-start gap-1.5 font-medium">
                             <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
                             <span>{step.warning}</span>
                           </div>
@@ -608,7 +608,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                       <FileText className="w-4 h-4 text-blue-600" />
                       <span>Tài liệu kỹ thuật nhà sản xuất: <strong>{equipment.manualDocName}</strong></span>
                     </span>
-                    <span className="text-[11px] text-blue-600 font-semibold cursor-pointer hover:underline">
+                    <span className="text-xs text-blue-600 font-semibold cursor-pointer hover:underline">
                       Xem file PDF hướng dẫn
                     </span>
                   </div>
@@ -636,14 +636,14 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                     {/* Top overlay */}
                     <div className="p-4 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between text-xs z-10">
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-mono font-bold text-[10px]">
+                        <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-mono font-bold text-xs">
                           HD 1080p
                         </span>
                         <span className="font-semibold text-slate-200 truncate">
                           {equipment.videoTutorial.title}
                         </span>
                       </div>
-                      <span className="font-mono text-[11px] text-slate-300">
+                      <span className="font-mono text-xs text-slate-300">
                         {equipment.videoTutorial.duration}
                       </span>
                     </div>
@@ -659,7 +659,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                       <div className="mt-3 text-xs text-slate-300 font-medium bg-black/40 px-3 py-1 rounded-full backdrop-blur-xs">
                         {isPlaying ? 'Đang phát video mô phỏng thao tác...' : 'Nhấp để xem video hướng dẫn'}
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-1">
+                      <div className="text-xs text-slate-400 mt-1">
                         Chương hiện tại: <strong>{equipment.videoTutorial.keyTimestamps[activeChapterIndex]?.label || 'Tổng quan'}</strong>
                       </div>
                     </div>
@@ -696,12 +696,12 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                           </button>
-                          <span className="font-mono text-[11px] text-slate-400">
+                          <span className="font-mono text-xs text-slate-400">
                             {Math.floor(videoProgress)}% / {equipment.videoTutorial.duration}
                           </span>
                         </div>
 
-                        <div className="text-[11px] text-slate-400">
+                        <div className="text-xs text-slate-400">
                           {equipment.name} • SOP Clip
                         </div>
                       </div>
@@ -724,7 +724,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                               : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                           }`}
                         >
-                          <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-white border border-slate-200 text-blue-700 shrink-0">
+                          <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-white border border-slate-200 text-blue-700 shrink-0">
                             {ch.time}
                           </span>
                           <span className="line-clamp-2 leading-tight">
@@ -792,7 +792,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full inline-block ${
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-block ${
                             note.category === 'config'
                               ? 'bg-blue-100 text-blue-800'
                               : note.category === 'tip'
@@ -808,7 +808,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                           </h4>
                         </div>
                         {note.isPinned && (
-                          <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                          <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
                             📌 Ghim
                           </span>
                         )}
@@ -819,7 +819,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                       </p>
 
                       {note.parameters && note.parameters.length > 0 && (
-                        <div className="p-2 bg-slate-50 border border-slate-200 rounded text-[11px] font-mono text-slate-700 space-y-0.5">
+                        <div className="p-2 bg-slate-50 border border-slate-200 rounded text-xs font-mono text-slate-700 space-y-0.5">
                           {note.parameters.slice(0, 3).map((p, idx) => (
                             <div key={idx} className="flex justify-between">
                               <span className="text-slate-500">{p.key}:</span>
@@ -829,7 +829,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                         </div>
                       )}
 
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
                         <span>Bởi <strong>{note.authorName}</strong></span>
                         <span>{new Date(note.createdAt).toLocaleDateString('vi-VN')}</span>
                       </div>
@@ -875,7 +875,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                       <div className="text-2xl font-black font-mono text-slate-900">
                         {forecast.healthPercentage}%
                       </div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">
+                      <span className="text-xs uppercase font-bold tracking-wider text-slate-500">
                         Tuổi Thọ Còn Lại
                       </span>
                     </div>
@@ -907,7 +907,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                     <div className="font-mono font-bold text-sm text-slate-900">
                       {forecast.predictedMaintenanceDate}
                     </div>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       Tốc độ hao mòn: {forecast.effectiveBurnRateHours}h/ngày
                     </p>
                   </div>
@@ -919,7 +919,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                     <div className="font-mono font-bold text-sm text-slate-700">
                       {forecast.calendarDueDate}
                     </div>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       Chu kỳ {forecast.calendarIntervalDays} ngày
                     </p>
                   </div>
@@ -929,7 +929,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                     <div className="font-mono font-bold text-sm text-indigo-700">
                       {forecast.stressMultiplier}x
                     </div>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       {forecast.incidentsCount} sự cố · {forecast.abnormalConditionCount} lần hao mòn
                     </p>
                   </div>
@@ -948,7 +948,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                   </div>
 
                   <div className="space-y-1 pt-1 border-t border-slate-100">
-                    <span className="font-semibold text-slate-700 block text-[11px]">Checklist kiểm tra kỹ thuật đề xuất:</span>
+                    <span className="font-semibold text-slate-700 block text-xs">Checklist kiểm tra kỹ thuật đề xuất:</span>
                     {forecast.suggestedChecklist.map((item, idx) => (
                       <div key={idx} className="flex items-start gap-2 text-slate-600 text-xs">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
@@ -973,10 +973,10 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                         <div key={rec.id} className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
                           <div className="flex items-center justify-between font-medium">
                             <span className="font-bold text-slate-800">{rec.certificateNumber || 'Bảo dưỡng định kỳ'}</span>
-                            <span className="font-mono text-slate-500 text-[11px]">{rec.performedDate}</span>
+                            <span className="font-mono text-slate-500 text-xs">{rec.performedDate}</span>
                           </div>
-                          <p className="text-[11px] text-slate-600">{rec.notes}</p>
-                          <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
+                          <p className="text-xs text-slate-600">{rec.notes}</p>
+                          <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-200/60">
                             <span>Kỹ sư: <strong>{rec.technicianName}</strong> ({rec.agencyOrVendor || 'Nội bộ'})</span>
                             {rec.costVND && <span>Chi phí: {rec.costVND.toLocaleString('vi-VN')} đ</span>}
                           </div>
@@ -1018,7 +1018,7 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
                 >
                   {/* Tag Header */}
                   <div className="border-b-2 border-slate-800 pb-2.5 text-center">
-                    <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-600">
+                    <div className="text-xs font-extrabold uppercase tracking-widest text-slate-600">
                       TRUNG TÂM PHÂN TÍCH & PHÒNG THÍ NGHIỆM TRỌNG ĐIỂM
                     </div>
                     <div className="text-sm font-black uppercase text-slate-900 tracking-tight mt-0.5">
@@ -1040,26 +1040,26 @@ export const EquipmentQRModal: React.FC<EquipmentQRModalProps> = ({
 
                     <div className="min-w-0 flex-1 space-y-1 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-500 block uppercase font-bold">Mã số tài sản:</span>
+                        <span className="text-xs text-slate-500 block uppercase font-bold">Mã số tài sản:</span>
                         <span className="font-mono font-black text-sm text-blue-700">{equipment.code}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 block uppercase font-bold">Tên thiết bị:</span>
+                        <span className="text-xs text-slate-500 block uppercase font-bold">Tên thiết bị:</span>
                         <span className="font-bold text-slate-900 line-clamp-2 text-xs leading-tight">{equipment.name}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 block uppercase font-bold">Model / Hãng:</span>
+                        <span className="text-xs text-slate-500 block uppercase font-bold">Model / Hãng:</span>
                         <span className="text-slate-700 font-medium">{equipment.model} ({equipment.manufacturer})</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 block uppercase font-bold">Phòng đặt máy:</span>
+                        <span className="text-xs text-slate-500 block uppercase font-bold">Phòng đặt máy:</span>
                         <span className="text-slate-800 font-bold">{equipment.room} - {equipment.building}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Tag Footer instructions */}
-                  <div className="border-t-2 border-slate-800 pt-2 text-[10px] text-slate-600 flex items-center justify-between">
+                  <div className="border-t-2 border-slate-800 pt-2 text-xs text-slate-600 flex items-center justify-between">
                     <div>
                       <span>Phụ trách: <strong>{equipment.responsibleStaff}</strong></span>
                       {equipment.emergencyContact && <span className="block">Hotline: <strong>{equipment.emergencyContact}</strong></span>}

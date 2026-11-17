@@ -173,7 +173,7 @@ export const CheckoutAlertBanner: React.FC<CheckoutAlertBannerProps> = ({
                   : `Admin: Có ${otherOverdueSessions.length} ca làm việc quá hạn trong phòng Lab`}
               </span>
               {primaryMySession?.equipment && (
-                <span className="hidden sm:inline bg-black/20 px-2 py-0.5 rounded font-mono text-[11px]">
+                <span className="hidden sm:inline bg-black/20 px-2 py-0.5 rounded font-mono text-xs">
                   [{primaryMySession.equipment.code}] {primaryMySession.equipment.name}
                 </span>
               )}
@@ -222,7 +222,7 @@ export const CheckoutAlertBanner: React.FC<CheckoutAlertBannerProps> = ({
 
                   <div className="space-y-0.5 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+                      <span className={`text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded ${
                         session.isOverdue ? 'bg-white text-red-700 font-extrabold' : 'bg-black/30 text-white'
                       }`}>
                         {session.isOverdue ? '🚨 ĐÃ QUÁ HẠN CHECK-OUT' : '🟢 CA ĐANG HOẠT ĐỘNG'}
@@ -235,7 +235,7 @@ export const CheckoutAlertBanner: React.FC<CheckoutAlertBannerProps> = ({
                       </span>
                     </div>
 
-                    <div className="text-[11px] text-white/90 flex items-center gap-3 flex-wrap">
+                    <div className="text-xs text-white/90 flex items-center gap-3 flex-wrap">
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3 h-3 opacity-75" />
                         <span>{session.equipment?.room || 'Phòng thí nghiệm'}</span>

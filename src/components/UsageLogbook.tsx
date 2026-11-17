@@ -90,27 +90,27 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
     switch (c) {
       case 'good':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-sm font-medium border border-emerald-200">
+          <span className="inline-flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-sm font-medium border border-emerald-200">
             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
             Tốt / Chuẩn
           </span>
         );
       case 'minor_wear':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-sm font-medium border border-amber-200">
+          <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-sm font-medium border border-amber-200">
             Hao mòn nhẹ
           </span>
         );
       case 'needs_calibration':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] text-orange-700 bg-orange-50 px-2 py-0.5 rounded-sm font-medium border border-orange-200">
+          <span className="inline-flex items-center gap-1 text-xs text-orange-700 bg-orange-50 px-2 py-0.5 rounded-sm font-medium border border-orange-200">
             <AlertTriangle className="w-3 h-3 text-orange-600" />
             Cần hiệu chuẩn
           </span>
         );
       case 'damaged':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] text-rose-700 bg-rose-50 px-2 py-0.5 rounded-sm font-medium border border-rose-200">
+          <span className="inline-flex items-center gap-1 text-xs text-rose-700 bg-rose-50 px-2 py-0.5 rounded-sm font-medium border border-rose-200">
             <AlertOctagon className="w-3 h-3 text-rose-600" />
             Hỏng hóc
           </span>
@@ -167,7 +167,7 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
               <Clock className="w-4 h-4 text-amber-600 animate-spin" />
               <span>{activeLogs.length} Phiên Đo Đang Chạy (Cần Check-out Khi Hoàn Tất)</span>
             </div>
-            <span className="text-[11px] text-amber-700 font-medium">
+            <span className="text-xs text-amber-700 font-medium">
               Vui lòng trả máy để hệ thống hoàn tất nhật ký
             </span>
           </div>
@@ -193,12 +193,12 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                         {eq?.name}
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
+                    <div className="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
                       <span>Người chạy: <strong className="text-slate-800">{user?.name}</strong></span>
                       <span>·</span>
                       <span>Bắt đầu: <strong className="font-mono text-slate-800">{checkInDate.toLocaleTimeString('vi-VN')}</strong></span>
                       {isMine && (
-                        <span className="text-[10px] bg-blue-100 text-blue-800 px-1 rounded font-bold">
+                        <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded font-bold">
                           Phiên của bạn
                         </span>
                       )}
@@ -302,7 +302,7 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
             <BookOpenCheck className="w-4 h-4 text-blue-600" />
             <span>Sổ Nhật Ký Vận Hành Phòng Thí Nghiệm ({filteredLogs.length} bản ghi)</span>
           </div>
-          <span className="text-slate-500 font-mono text-[11px]">
+          <span className="text-slate-500 font-mono text-xs">
             Đã hoàn tất: {completedLogs.length} / Đang chạy: {activeLogs.length}
           </span>
         </div>
@@ -344,11 +344,11 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                       {/* Equipment */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-mono font-bold text-slate-800 text-[11px]">
+                          <span className="font-mono font-bold text-slate-800 text-xs">
                             {eq?.code || log.equipmentId}
                           </span>
                           {log.projectCode && (
-                            <span className="text-[10px] bg-indigo-50 text-indigo-700 font-semibold px-1.5 py-0.2 rounded border border-indigo-200 inline-flex items-center gap-1 font-mono">
+                            <span className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-1.5 py-0.2 rounded border border-indigo-200 inline-flex items-center gap-1 font-mono">
                               <FolderGit2 className="w-2.5 h-2.5 text-indigo-600" />
                               {log.projectCode}
                             </span>
@@ -358,7 +358,7 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                           {eq?.name}
                         </div>
                         {log.consumedSupplies && log.consumedSupplies.length > 0 && (
-                          <div className="mt-0.5 flex items-center gap-1 text-[10px] text-amber-700 font-medium">
+                          <div className="mt-0.5 flex items-center gap-1 text-xs text-amber-700 font-medium">
                             <Package className="w-3 h-3 text-amber-600 shrink-0" />
                             <span>{log.consumedSupplies.length} vật tư ({log.materialCostVND ? `${log.materialCostVND.toLocaleString('vi-VN')} đ` : ''})</span>
                           </div>
@@ -370,13 +370,13 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                         <div className="font-semibold text-slate-900">
                           {user?.name || log.userId}
                         </div>
-                        <div className="text-[11px] text-slate-500 truncate max-w-[140px]">
+                        <div className="text-xs text-slate-500 truncate max-w-[140px]">
                           {user?.department}
                         </div>
                       </td>
 
                       {/* Check-in / Check-out timestamps */}
-                      <td className="py-3 px-4 font-mono text-[11px]">
+                      <td className="py-3 px-4 font-mono text-xs">
                         <div className="text-slate-800">
                           Vào: {inDate.toLocaleTimeString('vi-VN')} ({inDate.toLocaleDateString('vi-VN')})
                         </div>
@@ -397,7 +397,7 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                           <span className="text-amber-600 font-medium">---</span>
                         )}
                         {log.sampleCount !== undefined && (
-                          <div className="text-[10px] text-slate-500">
+                          <div className="text-xs text-slate-500">
                             {log.sampleCount} mẫu
                           </div>
                         )}
@@ -406,11 +406,11 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                       {/* Conditions */}
                       <td className="py-3 px-4 space-y-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-slate-400 w-8">Đầu:</span>
+                          <span className="text-xs text-slate-400 w-8">Đầu:</span>
                           {getConditionBadge(log.initialCondition)}
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-slate-400 w-8">Cuối:</span>
+                          <span className="text-xs text-slate-400 w-8">Cuối:</span>
                           {getConditionBadge(log.finalCondition)}
                         </div>
                       </td>
@@ -419,7 +419,7 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                       <td className="py-3 px-4">
                         {hasIncident ? (
                           <span
-                            className="inline-flex items-center gap-1 text-[11px] text-rose-700 bg-rose-50 px-2 py-0.5 rounded font-bold border border-rose-200"
+                            className="inline-flex items-center gap-1 text-xs text-rose-700 bg-rose-50 px-2 py-0.5 rounded font-bold border border-rose-200"
                             title={log.incidentReport?.description}
                           >
                             <AlertTriangle className="w-3 h-3 text-rose-600" />
@@ -506,7 +506,7 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
-                  <span className="text-slate-400 block text-[11px]">Giờ nhận máy (Check-in)</span>
+                  <span className="text-slate-400 block text-xs">Giờ nhận máy (Check-in)</span>
                   <span className="font-mono font-semibold text-slate-800 text-xs">
                     {new Date(selectedLogDetail.checkInTime).toLocaleString('vi-VN')}
                   </span>
@@ -516,7 +516,7 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                 </div>
 
                 <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
-                  <span className="text-slate-400 block text-[11px]">Giờ trả máy (Check-out)</span>
+                  <span className="text-slate-400 block text-xs">Giờ trả máy (Check-out)</span>
                   <span className="font-mono font-semibold text-slate-800 text-xs">
                     {selectedLogDetail.checkOutTime
                       ? new Date(selectedLogDetail.checkOutTime).toLocaleString('vi-VN')
@@ -552,7 +552,7 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
 
                   {selectedLogDetail.consumedSupplies && selectedLogDetail.consumedSupplies.length > 0 && (
                     <div className="space-y-1.5 pt-1 border-t border-indigo-100">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-700">
+                      <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                         <span className="flex items-center gap-1">
                           <Package className="w-3 h-3 text-amber-600" />
                           Vật tư tiêu hao xuất dùng trong ca:
@@ -563,7 +563,7 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                       </div>
                       <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
                         {selectedLogDetail.consumedSupplies.map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between bg-white px-2 py-1 rounded text-[11px] border border-slate-200">
+                          <div key={idx} className="flex items-center justify-between bg-white px-2 py-1 rounded text-xs border border-slate-200">
                             <span className="font-medium text-slate-800 truncate max-w-[200px]" title={item.supplyName}>
                               [{item.supplyCode}] {item.supplyName}
                             </span>
@@ -584,7 +584,7 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                   <div className="font-bold flex items-center gap-1.5 text-xs">
                     <AlertTriangle className="w-4 h-4 text-rose-600" />
                     <span>Báo Cáo Sự Cố Trong Ca</span>
-                    <span className="uppercase text-[10px] bg-rose-200 px-1 rounded">
+                    <span className="uppercase text-xs bg-rose-200 px-1 rounded">
                       {selectedLogDetail.incidentReport.severity}
                     </span>
                   </div>

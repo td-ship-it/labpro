@@ -79,7 +79,7 @@ export const CheckoutWarningModal: React.FC<CheckoutWarningModalProps> = ({
               </span>
             </div>
 
-            <div className="text-[11px] text-slate-500 space-y-1 pt-1 border-t border-slate-200">
+            <div className="text-xs text-slate-500 space-y-1 pt-1 border-t border-slate-200">
               <div className="flex items-center justify-between">
                 <span>Vị trí đặt máy:</span>
                 <span className="font-medium text-slate-800">{activeSession.equipment?.room || 'Phòng Lab'}</span>

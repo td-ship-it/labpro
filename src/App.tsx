@@ -798,17 +798,17 @@ export default function App() {
               <LabLogProLogo size={28} />
               <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-200">
                 <UmpHcmLogo size={22} variant="icon" />
-                <span className="text-[11px] font-bold text-teal-800">ĐH Y Dược TP.HCM</span>
+                <span className="text-xs font-bold text-teal-800">ĐH Y Dược TP.HCM</span>
                 <span className="text-slate-300">·</span>
                 <UmpSchoolOfPharmacyLogo size={22} variant="icon" />
-                <span className="text-[11px] font-bold text-emerald-800">Trường Dược</span>
+                <span className="text-xs font-bold text-emerald-800">Trường Dược</span>
                 <span className="text-slate-300">·</span>
                 <BaocheDeptLogo size={22} variant="icon" />
-                <span className="text-[11px] font-bold text-amber-800">Bộ Môn Bào Chế</span>
+                <span className="text-xs font-bold text-amber-800">Bộ Môn Bào Chế</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-[11px] flex-wrap justify-center md:justify-end">
+            <div className="flex items-center gap-4 text-xs flex-wrap justify-center md:justify-end">
               <span>
                 Đang đăng nhập: <strong>{currentUser.name}</strong> ({currentUser.title})
               </span>

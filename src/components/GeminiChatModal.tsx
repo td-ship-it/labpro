@@ -277,7 +277,7 @@ Tôi có thể giúp bạn:
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-base sm:text-lg tracking-tight">LabLog AI Assistant</h3>
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-white/15 px-2 py-0.5 rounded-full border border-white/20 text-cyan-200">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold bg-white/15 px-2 py-0.5 rounded-full border border-white/20 text-cyan-200">
                   <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
                   {aiInfo.label}
                 </span>
@@ -303,7 +303,7 @@ Tôi có thể giúp bạn:
             >
               <Globe className={`w-3.5 h-3.5 ${enableSearch ? 'text-emerald-300 animate-spin-slow' : 'text-slate-300'}`} />
               <span className="hidden md:inline">Google Search</span>
-              <span className={`text-[10px] px-1 rounded font-bold ${enableSearch ? 'bg-emerald-400 text-slate-900' : 'bg-white/20 text-white'}`}>
+              <span className={`text-xs px-1 rounded font-bold ${enableSearch ? 'bg-emerald-400 text-slate-900' : 'bg-white/20 text-white'}`}>
                 {enableSearch ? 'ON' : 'OFF'}
               </span>
             </button>
@@ -345,20 +345,20 @@ Tôi có thể giúp bạn:
               <FlaskConical className="w-3.5 h-3.5 text-blue-600" />
               Ngữ cảnh:
             </span>
-            <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-[11px] font-medium text-slate-700">
+            <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-xs font-medium text-slate-700">
               {equipmentList.length} thiết bị lab
             </span>
-            <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-[11px] font-medium text-slate-700">
+            <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-xs font-medium text-slate-700">
               {bookings.length} ca đăng ký
             </span>
             {initialEquipmentContext && (
-              <span className="bg-blue-50 border border-blue-200 text-blue-700 px-2 py-0.5 rounded text-[11px] font-semibold truncate max-w-[180px]">
+              <span className="bg-blue-50 border border-blue-200 text-blue-700 px-2 py-0.5 rounded text-xs font-semibold truncate max-w-[180px]">
                 🎯 {initialEquipmentContext.name}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 text-[11px]">
+          <div className="flex items-center gap-1.5 text-xs">
             <Globe className={`w-3.5 h-3.5 ${enableSearch ? 'text-emerald-600' : 'text-slate-400'}`} />
             <span className={enableSearch ? 'text-emerald-700 font-semibold' : 'text-slate-500'}>
               {aiInfo.search && enableSearch ? 'Đang kích hoạt Google Search Data' : 'Không tra cứu Internet'}
@@ -402,7 +402,7 @@ Tôi có thể giúp bạn:
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] opacity-70">
+                  <div className="flex items-center gap-2 text-xs opacity-70">
                     <span>{msg.timestamp}</span>
                     {msg.role === 'model' && !msg.isError && (
                       <button
@@ -433,7 +433,7 @@ Tôi có thể giúp bạn:
 
                 {/* Tài liệu nội bộ đã dùng để trả lời */}
                 {msg.role === 'model' && !msg.isError && msg.docSources && msg.docSources.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-600 space-y-0.5">
+                  <div className="mt-2 pt-2 border-t border-slate-100 text-xs text-slate-600 space-y-0.5">
                     <div className="font-semibold text-indigo-700">📚 Tài liệu của phòng Lab đã tham khảo:</div>
                     {msg.docSources.map((d) => (
                       <div key={d.n}>
@@ -444,7 +444,7 @@ Tôi có thể giúp bạn:
                     ))}
                   </div>
                 )}
-                {msg.role === 'model' && msg.note && <div className="mt-1 text-[11px] text-amber-700">{msg.note}</div>}
+                {msg.role === 'model' && msg.note && <div className="mt-1 text-xs text-amber-700">{msg.note}</div>}
 
                 {/* Google Search Grounding Section (Display verified web queries and source links) */}
                 {msg.grounding && (
@@ -455,7 +455,7 @@ Tôi có thể giúp bạn:
                           <Globe className="w-3.5 h-3.5 text-blue-600" />
                           <span>Dữ Liệu Google Search Đã Tra Cứu (Real-time Grounding)</span>
                         </div>
-                        <span className="text-[10px] bg-blue-200/60 text-blue-800 font-semibold px-1.5 py-0.5 rounded">
+                        <span className="text-xs bg-blue-200/60 text-blue-800 font-semibold px-1.5 py-0.5 rounded">
                           Google Verified
                         </span>
                       </div>
@@ -463,14 +463,14 @@ Tôi có thể giúp bạn:
                       {/* Search Queries Used */}
                       {msg.grounding.searchQueries && msg.grounding.searchQueries.length > 0 && (
                         <div className="mb-2.5">
-                          <span className="text-[11px] text-slate-500 font-medium block mb-1">
+                          <span className="text-xs text-slate-500 font-medium block mb-1">
                             Truy vấn tìm kiếm:
                           </span>
                           <div className="flex flex-wrap gap-1.5">
                             {msg.grounding.searchQueries.map((q, idx) => (
                               <span
                                 key={idx}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-blue-200 text-blue-800 text-[11px] font-medium"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-blue-200 text-blue-800 text-xs font-medium"
                               >
                                 <Search className="w-2.5 h-2.5 text-blue-500" />
                                 {q}
@@ -483,7 +483,7 @@ Tôi có thể giúp bạn:
                       {/* Source Citations */}
                       {msg.grounding.sources && msg.grounding.sources.length > 0 && (
                         <div>
-                          <span className="text-[11px] text-slate-500 font-medium block mb-1">
+                          <span className="text-xs text-slate-500 font-medium block mb-1">
                             Nguồn tham chiếu ({msg.grounding.sources.length}):
                           </span>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -507,7 +507,7 @@ Tôi có thể giúp bạn:
                                     <div className="text-xs font-semibold text-blue-700 group-hover:underline truncate">
                                       {src.title || domain}
                                     </div>
-                                    <div className="text-[10px] text-slate-500 truncate">
+                                    <div className="text-xs text-slate-500 truncate">
                                       {domain}
                                     </div>
                                   </div>
@@ -558,7 +558,7 @@ Tôi có thể giúp bạn:
         {/* Quick Suggestion Chips */}
         <div className="px-4 sm:px-6 py-2 bg-slate-100/70 border-t border-slate-200 shrink-0 overflow-x-auto">
           <div className="flex items-center gap-1.5 whitespace-nowrap pb-0.5">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 shrink-0">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 shrink-0">
               <Lightbulb className="w-3 h-3 text-amber-500" />
               Gợi ý:
             </span>
@@ -589,7 +589,7 @@ Tôi có thể giúp bạn:
                 disabled={isLoading}
                 className="w-full resize-none rounded-xl border border-slate-300 p-3 pr-10 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-400 max-h-32"
               />
-              <div className="absolute right-3 bottom-3 text-[10px] text-slate-400 hidden sm:block">
+              <div className="absolute right-3 bottom-3 text-xs text-slate-400 hidden sm:block">
                 Shift + Enter để xuống dòng
               </div>
             </div>
@@ -605,7 +605,7 @@ Tôi có thể giúp bạn:
             </button>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2 px-1">
+          <div className="flex items-center justify-between text-xs text-slate-500 mt-2 px-1">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>Vận hành bởi <strong>{aiInfo.label}</strong></span>

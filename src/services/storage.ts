@@ -22,6 +22,7 @@ import {
   ConsumedSupplyItem,
   AiDocMeta,
 } from '../types';
+import { buildUsageCsv, DEFAULT_USAGE_FIELDS } from './usageExport';
 import { callApi, getToken, setToken, setAuthLostHandler, ApiError, ApiResponse } from './api';
 
 interface Store {
@@ -1056,6 +1057,7 @@ export const LabStorage = {
     logs: UsageLog[];
     equipmentList: Equipment[];
     users: User[];
+    fields?: string[];
   }): void {
     const { startDate, endDate, equipmentId, logs, equipmentList, users } = params;
     const eqMap = new Map(equipmentList.map((e) => [e.id, e]));
@@ -1071,77 +1073,27 @@ export const LabStorage = {
 
     const selectedEq = equipmentId !== 'all' ? eqMap.get(equipmentId) : null;
     const totalMinutes = filteredLogs.reduce((acc, l) => acc + (l.durationMinutes || 0), 0);
-    const totalHours = (totalMinutes / 60).toFixed(1);
     const totalSamples = filteredLogs.reduce((acc, l) => acc + (l.sampleCount || 0), 0);
     const incidentCount = filteredLogs.filter((l) => l.incidentReport?.hasIncident).length;
 
-    const conditionLabel = (c?: MachineCondition) => {
-      switch (c) {
-        case 'good': return 'Tốt / Bình thường';
-        case 'minor_wear': return 'Hao mòn nhẹ';
-        case 'needs_calibration': return 'Cần hiệu chuẩn';
-        case 'damaged': return 'Hỏng / Sự cố';
-        default: return 'Chưa ghi nhận';
-      }
-    };
-
-    const summaryRows = [
-      'BÁO CÁO VẬN HÀNH & SỬ DỤNG THIẾT BỊ PHÒNG THÍ NGHIỆM',
-      `Khoảng thời gian:,"Từ ${startDate || 'Ban đầu'} đến ${endDate || 'Hiện tại'}"`,
-      `Phạm vi thiết bị:,"${selectedEq ? `[${selectedEq.code}] ${selectedEq.name}` : 'Tất cả thiết bị'}"`,
-      `Thời điểm xuất:,"${new Date().toLocaleString('vi-VN')}"`,
-      `Tổng số ca chạy máy:,${filteredLogs.length}`,
-      `Tổng số giờ hoạt động:,${totalHours} giờ`,
-      `Tổng số mẫu phân tích:,${totalSamples} mẫu`,
-      `Số sự cố ghi nhận:,${incidentCount} vụ`,
-      '',
+    const summary: string[][] = [
+      ['BÁO CÁO VẬN HÀNH & SỬ DỤNG THIẾT BỊ PHÒNG THÍ NGHIỆM'],
+      ['Khoảng thời gian', `Từ ${startDate || 'ban đầu'} đến ${endDate || 'hiện tại'}`],
+      ['Phạm vi thiết bị', selectedEq ? `[${selectedEq.code}] ${selectedEq.name}` : 'Tất cả thiết bị'],
+      ['Thời điểm xuất', new Date().toLocaleString('vi-VN')],
+      ['Tổng số ca chạy máy', String(filteredLogs.length)],
+      ['Tổng số giờ hoạt động', `${(totalMinutes / 60).toFixed(1)} giờ`],
+      ['Tổng số mẫu phân tích', `${totalSamples} mẫu`],
+      ['Số sự cố ghi nhận', `${incidentCount} vụ`],
     ];
 
-    const headers = [
-      'STT',
-      'Mã Nhật Ký',
-      'Mã Thiết Bị',
-      'Tên Thiết Bị',
-      'Phòng Lab',
-      'Người Vận Hành',
-      'Khoa / Đơn Vị',
-      'Thời Điểm Check-in',
-      'Thời Điểm Check-out',
-      'Thời Gian Dùng (phút)',
-      'Số Lượng Mẫu',
-      'Tình Trạng Trước Khi Dùng',
-      'Tình Trạng Sau Khi Dùng',
-      'Có Sự Cố Không',
-      'Mức Độ Sự Cố',
-      'Ghi Chú Vận Hành',
-    ];
-
-    const dataRows = filteredLogs.map((log, idx) => {
-      const eq = eqMap.get(log.equipmentId);
-      const u = userMap.get(log.userId);
-      const inc = log.incidentReport;
-
-      return [
-        idx + 1,
-        `"${log.id}"`,
-        `"${eq?.code || log.equipmentId}"`,
-        `"${(eq?.name || '').replace(/"/g, '""')}"`,
-        `"${(eq?.room || '').replace(/"/g, '""')}"`,
-        `"${(u?.name || log.userId).replace(/"/g, '""')}"`,
-        `"${(u?.department || '').replace(/"/g, '""')}"`,
-        `"${log.checkInTime ? new Date(log.checkInTime).toLocaleString('vi-VN') : ''}"`,
-        `"${log.checkOutTime ? new Date(log.checkOutTime).toLocaleString('vi-VN') : 'Đang chạy'}"`,
-        `"${log.durationMinutes || ''}"`,
-        `"${log.sampleCount || 0}"`,
-        `"${conditionLabel(log.initialCondition)}"`,
-        `"${conditionLabel(log.finalCondition)}"`,
-        `"${inc?.hasIncident ? 'CÓ SỰ CỐ' : 'Bình thường'}"`,
-        `"${inc?.severity || 'Không'}"`,
-        `"${(log.operatorNotes || '').replace(/"/g, '""')}"`,
-      ].join(',');
+    const csvContent = buildUsageCsv({
+      logs: filteredLogs,
+      eqMap,
+      userMap,
+      fields: params.fields && params.fields.length ? params.fields : DEFAULT_USAGE_FIELDS,
+      summary,
     });
-
-    const csvContent = '\uFEFF' + [...summaryRows, headers.join(','), ...dataRows].join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

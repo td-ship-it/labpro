@@ -239,7 +239,7 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                       <button
                         type="button"
                         onClick={() => onOpenQuickNotes(equipment.id)}
-                        className="text-[11px] text-blue-700 hover:text-blue-900 font-semibold hover:underline flex items-center gap-1"
+                        className="text-xs text-blue-700 hover:text-blue-900 font-semibold hover:underline flex items-center gap-1"
                       >
                         <span>Mở toàn bộ sổ ghi chú</span>
                         <ExternalLink className="w-3 h-3" />
@@ -249,16 +249,16 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
 
                   <div className="space-y-1.5 max-h-36 overflow-y-auto">
                     {displayNotes.map((note) => (
-                      <div key={note.id} className="p-2 bg-white/95 rounded-lg border border-amber-200 text-[11px] space-y-1">
+                      <div key={note.id} className="p-2 bg-white/95 rounded-lg border border-amber-200 text-xs space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-900">{note.title}</span>
-                          <span className="text-[10px] text-amber-700 font-medium">Bởi {note.authorName}</span>
+                          <span className="text-xs text-amber-700 font-medium">Bởi {note.authorName}</span>
                         </div>
                         <p className="text-slate-600 line-clamp-2">{note.content}</p>
                         {note.parameters && note.parameters.length > 0 && (
                           <div className="flex flex-wrap gap-1 pt-0.5">
                             {note.parameters.slice(0, 3).map((p, pIdx) => (
-                              <span key={pIdx} className="bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded font-mono text-[10px]">
+                              <span key={pIdx} className="bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded font-mono text-xs">
                                 {p.key}: <strong className="text-blue-700">{p.value}</strong>
                               </span>
                             ))}
@@ -299,7 +299,7 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                         {opt.icon}
                         <span>{opt.label}</span>
                       </div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">
+                      <div className="text-xs text-slate-500 mt-0.5">
                         {opt.desc}
                       </div>
                     </div>
@@ -414,7 +414,7 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Bàn giao / Vệ sinh thiết bị:
                 </label>
-                <div className="text-[11px] text-slate-500 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                <div className="text-xs text-slate-500 p-2 bg-slate-50 border border-slate-200 rounded-lg">
                   Lau khô buồng mẫu, tắt thiết bị phụ trợ & khóa van an toàn.
                 </div>
               </div>
@@ -427,12 +427,12 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                   <Package className="w-3.5 h-3.5 text-amber-600" />
                   <span>Vật Tư Tiêu Hao Thực Tế (Ghi Nhận Cho Đề Tài)</span>
                   {(activeBooking?.projectCode || activeLog?.projectCode) && (
-                    <span className="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono text-[10px] font-bold">
+                    <span className="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono text-xs font-bold">
                       [{activeBooking?.projectCode || activeLog?.projectCode}]
                     </span>
                   )}
                 </label>
-                <span className="text-[11px] font-mono text-slate-700">
+                <span className="text-xs font-mono text-slate-700">
                   Tổng: <strong className="text-emerald-700">{consumedSupplies.reduce((acc, s) => acc + s.totalCostVND, 0).toLocaleString('vi-VN')} ₫</strong>
                 </span>
               </div>
@@ -444,7 +444,7 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                     key={sup.id}
                     type="button"
                     onClick={() => handleAddSupply(sup, 1)}
-                    className="px-2 py-0.5 text-[10px] rounded border border-slate-200 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-700 flex items-center gap-1"
+                    className="px-2 py-0.5 text-xs rounded border border-slate-200 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-700 flex items-center gap-1"
                   >
                     <Plus className="w-2.5 h-2.5" />
                     <span>{sup.name}</span>
@@ -458,7 +458,7 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                   {consumedSupplies.map((item) => {
                     const supMatch = catalogSupplies.find((c) => c.id === item.supplyId);
                     return (
-                      <div key={item.supplyId} className="p-1.5 rounded-lg bg-white border border-slate-200 flex items-center justify-between text-[11px]">
+                      <div key={item.supplyId} className="p-1.5 rounded-lg bg-white border border-slate-200 flex items-center justify-between text-xs">
                         <span className="font-medium text-slate-800 truncate max-w-[200px]">{item.supplyName}</span>
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-1 border border-slate-200 rounded p-0.5">
@@ -507,7 +507,7 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
               {hasIncident && (
                 <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg space-y-2 animate-in fade-in duration-100">
                   <div>
-                    <label className="block text-[11px] font-semibold text-rose-900 mb-1">
+                    <label className="block text-xs font-semibold text-rose-900 mb-1">
                       Mức độ nghiêm trọng của sự cố:
                     </label>
                     <select
@@ -522,7 +522,7 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-rose-900 mb-1">
+                    <label className="block text-xs font-semibold text-rose-900 mb-1">
                       Mô tả hiện tượng sự cố: <span className="text-rose-600">*</span>
                     </label>
                     <textarea

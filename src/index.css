@@ -44,6 +44,29 @@
     max-width: 100% !important;
   }
 
+  /* In báo cáo: chỉ in vùng báo cáo đang xem, bố cục y hệt bản xem trước */
+  body.print-only-target * {
+    visibility: hidden !important;
+  }
+
+  body.print-only-target #printable-report,
+  body.print-only-target #printable-report *,
+  body.print-only-target #printable-efficiency,
+  body.print-only-target #printable-efficiency * {
+    visibility: visible !important;
+  }
+
+  body.print-only-target #printable-report,
+  body.print-only-target #printable-efficiency {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
   /* Single QR Label Print Mode */
   body.printing-qr-single * {
     visibility: hidden !important;

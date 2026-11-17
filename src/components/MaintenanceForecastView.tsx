@@ -280,7 +280,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
           <div className="text-2xl font-extrabold font-mono text-slate-900">
             {totalLabActualHours}<span className="text-sm font-sans font-medium text-slate-500 ml-1">giờ</span>
           </div>
-          <p className="text-[11px] text-slate-500 truncate">
+          <p className="text-xs text-slate-500 truncate">
             Từ {logs.length} ca bàn giao nhật ký
           </p>
         </div>
@@ -299,7 +299,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
           <div className="text-2xl font-extrabold font-mono text-rose-600">
             {countActionNeeded}
           </div>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-xs text-slate-500">
             Quá hạn hoặc sắp chạm ngưỡng
           </p>
         </div>
@@ -318,7 +318,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
           <div className="text-2xl font-extrabold font-mono text-amber-600">
             {countUrgent}
           </div>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-xs text-slate-500">
             Hao mòn &gt; 80% định mức
           </p>
         </div>
@@ -337,7 +337,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
           <div className="text-2xl font-extrabold font-mono text-slate-800">
             {countAttention}
           </div>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-xs text-slate-500">
             Lên kế hoạch kiểm định sớm
           </p>
         </div>
@@ -356,7 +356,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
           <div className="text-2xl font-extrabold font-mono text-emerald-600">
             {countOptimal}
           </div>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-xs text-slate-500">
             Sức khỏe thiết bị &gt; 50%
           </p>
         </div>
@@ -443,7 +443,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
               <span className="text-xs font-bold text-slate-800">
                 Mô phỏng cường độ ca đo (What-If Simulator):
               </span>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs text-slate-500">
                 Thử nghiệm tăng tải nghiên cứu mùa cao điểm để xem thuật toán dự báo ngày bảo trì thay đổi tức thời.
               </p>
             </div>
@@ -468,7 +468,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
             {loadMultiplier !== 1.0 && (
               <button
                 onClick={() => setLoadMultiplier(1.0)}
-                className="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold underline flex items-center gap-1"
+                className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold underline flex items-center gap-1"
                 title="Khôi phục cường độ chuẩn"
               >
                 <RotateCcw className="w-3 h-3" /> Đặt lại
@@ -546,7 +546,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                   {/* Health Score Pill */}
                   <div className="flex items-center gap-3">
                     <div className={`px-3 py-1.5 rounded-xl border text-center font-mono ${getHealthColor(result.healthPercentage, result.urgency)}`}>
-                      <div className="text-[10px] font-sans font-semibold uppercase tracking-wider">
+                      <div className="text-xs font-sans font-semibold uppercase tracking-wider">
                         Sức Khỏe Máy
                       </div>
                       <div className="text-lg font-extrabold leading-tight">
@@ -558,7 +558,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                       <div className="font-bold text-slate-800">
                         {result.urgencyLabel}
                       </div>
-                      <div className="text-slate-500 text-[11px]">
+                      <div className="text-slate-500 text-xs">
                         Còn ~<strong>{result.remainingUsefulHours}h</strong> ({result.remainingDaysEstimated} ngày)
                       </div>
                     </div>
@@ -574,13 +574,13 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                         Giờ chạy tích lũy chu kỳ này: <strong>{result.hoursSinceLastMaintenance}h</strong> / định mức <strong>{result.maxOperatingHoursThreshold}h</strong>
                       </span>
                       {result.stressMultiplier > 1.05 && (
-                        <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 font-semibold" title={`Hệ số gia tốc hao mòn: ${result.stressMultiplier}x do điều kiện máy hoặc sự cố`}>
+                        <span className="text-xs font-mono px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 font-semibold" title={`Hệ số gia tốc hao mòn: ${result.stressMultiplier}x do điều kiện máy hoặc sự cố`}>
                           α={result.stressMultiplier}x
                         </span>
                       )}
                     </div>
 
-                    <div className="text-[11px] text-slate-500 font-mono">
+                    <div className="text-xs text-slate-500 font-mono">
                       {Math.round((result.hoursSinceLastMaintenance / result.maxOperatingHoursThreshold) * 100)}% định mức
                     </div>
                   </div>
@@ -606,7 +606,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                     <div className="font-mono font-bold text-sm text-slate-900">
                       {result.predictedMaintenanceDate}
                     </div>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       Tốc độ hao mòn: <strong>{result.effectiveBurnRateHours}h/ngày</strong>
                     </p>
                   </div>
@@ -620,7 +620,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                     <div className="font-mono font-bold text-sm text-slate-700">
                       {result.calendarDueDate}
                     </div>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       Lần bảo trì trước: {result.lastMaintenanceDate}
                     </p>
                   </div>
@@ -646,7 +646,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                         Bám sát tiến độ lịch định kỳ (±{Math.abs(result.daysVarianceVsCalendar)} ngày)
                       </div>
                     )}
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       Ngày khuyến nghị: <strong className="text-indigo-700">{result.recommendedMaintenanceDate}</strong>
                     </p>
                   </div>
@@ -659,7 +659,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                       <Wrench className="w-3.5 h-3.5 text-indigo-600" />
                       <span>Khuyến nghị kỹ thuật kiểm định:</span>
                     </div>
-                    <p className="text-slate-600 text-[11px] leading-relaxed">
+                    <p className="text-slate-600 text-xs leading-relaxed">
                       {result.actionRecommendation}
                     </p>
                   </div>
@@ -848,7 +848,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                 />
               </div>
 
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-[11px] leading-relaxed flex items-start gap-2">
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs leading-relaxed flex items-start gap-2">
                 <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <div>
                   Khi lưu bản ghi bảo trì, hệ thống sẽ tự động cập nhật <strong>Ngày bảo trì gần nhất</strong>, reset <strong>chu kỳ giờ vận hành</strong> về 0h cho kỳ mới, và khôi phục trạng thái thiết bị sang <strong>Sẵn sàng (Available)</strong>.
@@ -909,7 +909,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                   <Sparkles className="w-4 h-4 text-indigo-600" />
                   Công Thức Toán Học Dự Báo (Predictive Maintenance Formula):
                 </h4>
-                <div className="font-mono text-[11px] bg-white p-2.5 rounded-lg border border-indigo-100 text-indigo-900 space-y-1">
+                <div className="font-mono text-xs bg-white p-2.5 rounded-lg border border-indigo-100 text-indigo-900 space-y-1">
                   <div>1. Giờ hao mòn hiệu dụng: <strong>H_wear = H_actual × α_stress</strong></div>
                   <div>2. Giờ còn lại: <strong>H_remain = Max(0, H_threshold - H_wear)</strong></div>
                   <div>3. Tốc độ hao mòn ngày: <strong>V_daily = Avg(H_last30d) × LoadFactor</strong></div>
@@ -928,7 +928,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                       <th className="p-2.5">Ghi Chú Nguồn Gốc</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                  <tbody className="divide-y divide-slate-100 font-mono text-xs">
                     <tr>
                       <td className="p-2.5 font-sans font-medium text-slate-800">Tổng giờ đo nhật ký chu kỳ này</td>
                       <td className="p-2.5 text-right font-bold text-slate-900">{detailEquipmentResult.hoursSinceLastMaintenance}h</td>
@@ -977,7 +977,7 @@ export const MaintenanceForecastView: React.FC<MaintenanceForecastViewProps> = (
                 <div className="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
                   {detailEquipmentResult.suggestedChecklist.map((item, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-slate-700">
-                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
                         {idx + 1}
                       </span>
                       <span>{item}</span>

@@ -217,7 +217,7 @@ export const AiDocsManager: React.FC<AiDocsManagerProps> = ({ currentUser, equip
                 <li key={d.docId} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50/60">
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-slate-900 truncate">{d.title}</div>
-                    <div className="text-[11px] text-slate-500 flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+                    <div className="text-xs text-slate-500 flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
                       <span>{d.category}</span>
                       <span>·</span>
                       <span>{eq ? `Thiết bị ${eq.code}` : 'Dùng chung'}</span>
@@ -393,7 +393,7 @@ export const AiDocsManager: React.FC<AiDocsManagerProps> = ({ currentUser, equip
                   {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                   {reading || 'Tải lên PDF / Word / TXT'}
                 </button>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-xs text-slate-500">
                   Chữ được lấy ra ngay trên máy bạn rồi điền vào ô dưới để kiểm tra trước khi lưu. Tải nhiều file sẽ nối tiếp nội dung.
                   PDF dạng ảnh scan không lấy được chữ.
                 </span>
@@ -417,7 +417,7 @@ export const AiDocsManager: React.FC<AiDocsManagerProps> = ({ currentUser, equip
                 />
               </label>
 
-              <p className="text-[11px] text-slate-500 flex items-start gap-1.5">
+              <p className="text-xs text-slate-500 flex items-start gap-1.5">
                 <Info className="w-3.5 h-3.5 shrink-0 mt-px" />
                 Viết rõ ràng, mỗi mục một đoạn sẽ giúp Trợ lý tìm đúng hơn. Không đưa thông tin mật (mật khẩu, số tài khoản…) vào tài liệu.
               </p>

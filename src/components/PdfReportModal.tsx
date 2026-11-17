@@ -76,6 +76,13 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
   const incidentLogs = filteredLogs.filter((l) => l.incidentReport?.hasIncident);
 
   const handlePrint = () => {
+    // Chỉ in vùng báo cáo (không in phần giao diện bên dưới), để bản in giống hệt bản xem trước
+    document.body.classList.add('print-only-target');
+    const done = () => {
+      document.body.classList.remove('print-only-target');
+      window.removeEventListener('afterprint', done);
+    };
+    window.addEventListener('afterprint', done);
     window.print();
   };
 
@@ -93,7 +100,7 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
               <h3 className="text-sm font-bold text-slate-900">
                 Xem Trước Bản In & Xuất Báo Cáo PDF
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs text-slate-500">
                 Định dạng A4 tiêu chuẩn phòng thí nghiệm khoa học, tương thích lưu file PDF
               </p>
             </div>
@@ -132,7 +139,7 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
                   <BaocheDeptLogo size={38} variant="icon" />
                 </div>
                 <div className="text-left space-y-0.5">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     BỘ Y TẾ
                   </div>
                   <div className="text-xs font-black uppercase tracking-tight text-teal-950">
@@ -141,7 +148,7 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
                   <div className="text-xs font-bold uppercase text-emerald-900">
                     TRƯỜNG DƯỢC · BỘ MÔN BÀO CHẾ
                   </div>
-                  <div className="text-[10px] text-slate-500 font-mono">
+                  <div className="text-xs text-slate-500 font-mono">
                     Phòng Thí Nghiệm & Thực Tập Bào Chế Dược Phẩm
                   </div>
                 </div>
@@ -155,7 +162,7 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
                   <div className="text-xs italic text-slate-700">
                     Độc lập - Tự do - Hạnh phúc
                   </div>
-                  <div className="text-[10px] text-slate-500 pt-0.5 font-mono">
+                  <div className="text-xs text-slate-500 pt-0.5 font-mono">
                     Số: LAB-{new Date().getFullYear()}/BC-TB
                   </div>
                 </div>
@@ -213,26 +220,26 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
               </h4>
               <div className="grid grid-cols-4 gap-3 text-center">
                 <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50">
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Tổng lượt vận hành</div>
+                  <div className="text-xs text-slate-500 uppercase font-semibold">Tổng lượt vận hành</div>
                   <div className="text-xl font-bold font-mono text-slate-900 mt-1">{totalSessions}</div>
-                  <div className="text-[10px] text-slate-400">phiên chạy máy</div>
+                  <div className="text-xs text-slate-400">phiên chạy máy</div>
                 </div>
                 <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50">
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Tổng thời gian chạy</div>
+                  <div className="text-xs text-slate-500 uppercase font-semibold">Tổng thời gian chạy</div>
                   <div className="text-xl font-bold font-mono text-blue-700 mt-1">{totalHours}</div>
-                  <div className="text-[10px] text-slate-400">giờ hoạt động</div>
+                  <div className="text-xs text-slate-400">giờ hoạt động</div>
                 </div>
                 <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50">
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Tổng số mẫu đo</div>
+                  <div className="text-xs text-slate-500 uppercase font-semibold">Tổng số mẫu đo</div>
                   <div className="text-xl font-bold font-mono text-emerald-700 mt-1">{totalSamples}</div>
-                  <div className="text-[10px] text-slate-400">mẫu phân tích</div>
+                  <div className="text-xs text-slate-400">mẫu phân tích</div>
                 </div>
                 <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50">
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Sự cố phát sinh</div>
+                  <div className="text-xs text-slate-500 uppercase font-semibold">Sự cố phát sinh</div>
                   <div className={`text-xl font-bold font-mono mt-1 ${incidentLogs.length > 0 ? 'text-amber-700' : 'text-slate-900'}`}>
                     {incidentLogs.length}
                   </div>
-                  <div className="text-[10px] text-slate-400">vụ việc ghi nhận</div>
+                  <div className="text-xs text-slate-400">vụ việc ghi nhận</div>
                 </div>
               </div>
             </div>
@@ -244,7 +251,7 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
               </h4>
 
               <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-[11px]">
+                <table className="w-full text-left text-xs">
                   <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
                     <tr>
                       <th className="p-2 text-center w-8">STT</th>
@@ -276,17 +283,17 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
                             <td className="p-2 text-center font-mono">{index + 1}</td>
                             <td className="p-2 font-mono whitespace-nowrap">
                               <div>{inDate.toLocaleDateString('vi-VN')}</div>
-                              <div className="text-[10px] text-slate-500">
+                              <div className="text-xs text-slate-500">
                                 {inDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                               </div>
                             </td>
                             <td className="p-2">
                               <span className="font-mono font-bold text-slate-800">{eq?.code}</span>
-                              <div className="text-[10px] text-slate-600 line-clamp-1">{eq?.name}</div>
+                              <div className="text-xs text-slate-600 line-clamp-1">{eq?.name}</div>
                             </td>
                             <td className="p-2">
                               <div className="font-semibold">{user?.name || log.userId}</div>
-                              <div className="text-[10px] text-slate-500">{user?.department}</div>
+                              <div className="text-xs text-slate-500">{user?.department}</div>
                             </td>
                             <td className="p-2 text-right font-mono tabular-nums">
                               {log.durationMinutes ? `${log.durationMinutes} ph` : '---'}
@@ -303,7 +310,7 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
                                 <span className="text-emerald-700 font-medium">Hoạt động tốt</span>
                               )}
                             </td>
-                            <td className="p-2 text-slate-600 text-[10px] max-w-[150px] truncate">
+                            <td className="p-2 text-slate-600 text-xs min-w-[140px] whitespace-normal break-words">
                               {log.operatorNotes || '---'}
                             </td>
                           </tr>
@@ -338,17 +345,17 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
               {/* 3-column Signatures block */}
               <div className="grid grid-cols-3 gap-4 pt-8 text-center text-xs">
                 <div className="space-y-16">
-                  <div className="font-bold text-slate-800 uppercase text-[11px]">
+                  <div className="font-bold text-slate-800 uppercase text-xs">
                     NGƯỜI LẬP BÁO CÁO
-                    <div className="font-normal italic text-[10px] text-slate-500">(Ký và ghi rõ họ tên)</div>
+                    <div className="font-normal italic text-xs text-slate-500">(Ký và ghi rõ họ tên)</div>
                   </div>
                   <div className="font-semibold text-slate-900">{currentUser.name}</div>
                 </div>
 
                 <div className="space-y-16">
-                  <div className="font-bold text-slate-800 uppercase text-[11px]">
+                  <div className="font-bold text-slate-800 uppercase text-xs">
                     CÁN BỘ PHỤ TRÁCH MÁY
-                    <div className="font-normal italic text-[10px] text-slate-500">(Ký và ghi rõ họ tên)</div>
+                    <div className="font-normal italic text-xs text-slate-500">(Ký và ghi rõ họ tên)</div>
                   </div>
                   <div className="font-semibold text-slate-900">
                     {selectedEquipment?.responsibleStaff || 'KTV. Hoàng Tuấn Cường'}
@@ -356,9 +363,9 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
                 </div>
 
                 <div className="space-y-16">
-                  <div className="font-bold text-slate-800 uppercase text-[11px]">
+                  <div className="font-bold text-slate-800 uppercase text-xs">
                     TRƯỞNG PHÒNG THÍ NGHIỆM
-                    <div className="font-normal italic text-[10px] text-slate-500">(Ký tên và đóng dấu)</div>
+                    <div className="font-normal italic text-xs text-slate-500">(Ký tên và đóng dấu)</div>
                   </div>
                   <div className="font-semibold text-slate-900">TS. Lê Quang Dũng</div>
                 </div>

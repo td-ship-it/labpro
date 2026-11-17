@@ -117,7 +117,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     if (preselectedEquipmentId) {
       setSelectedEqId(preselectedEquipmentId);
     } else if (equipmentList.length > 0 && !selectedEqId) {
-      const firstAvail = equipmentList.find((e) => e.status !== 'maintenance') || equipmentList[0];
+      const pool = equipmentList.filter((e) => currentUser.role === 'admin' || (e.trainedUserIds || []).includes(currentUser.id));
+      const firstAvail = pool.find((e) => e.status !== 'maintenance') || pool[0];
+      if (!firstAvail) return;
       setSelectedEqId(firstAvail.id);
     }
     if (preselectedDate) {
@@ -133,7 +135,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   if (!isOpen) return null;
 
-  const selectedEquipment = equipmentList.find((e) => e.id === selectedEqId);
+  // Số máy hiển thị tùy theo tài khoản: chỉ máy đã có tên trong danh sách tập huấn (Admin xem tất cả)
+  const visibleEquipment = equipmentList.filter((e) => currentUser.role === 'admin' || (e.trainedUserIds || []).includes(currentUser.id));
+  const selectedEquipment = visibleEquipment.find((e) => e.id === selectedEqId) || equipmentList.find((e) => e.id === selectedEqId);
 
   // Real-time conflict calculation
   const conflictResult = selectedEqId && date && startTime && endTime
@@ -158,6 +162,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
     if (!selectedEqId) {
       setErrorMsg('Vui lòng chọn thiết bị.');
+      return;
+    }
+    if (!selectedProjectId) {
+      setErrorMsg('Vui lòng chọn đề tài nghiên cứu (thông tin bắt buộc).');
       return;
     }
 
@@ -253,7 +261,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-colors bg-white font-medium"
               required
             >
-              {equipmentList.map((eq) => (
+              {visibleEquipment.map((eq) => (
                 <option key={eq.id} value={eq.id} disabled={eq.status === 'maintenance'}>
                   [{eq.code}] {eq.name} - {eq.room} {eq.status === 'maintenance' ? '(Đang bảo trì)' : ''}
                 </option>
@@ -374,7 +382,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           )}
 
           {exceedsMaxHours && (
-            <div className="text-[11px] text-amber-700">
+            <div className="text-xs text-amber-700">
               * Lưu ý: Thời lượng ({durationHours}h) vượt quy định tiêu chuẩn {selectedEquipment?.maxBookingHoursPerSession}h. Hãy cân nhắc chia nhỏ phiên đo.
             </div>
           )}
@@ -399,9 +407,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                 <FolderGit2 className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Gắn Thẻ Đề Tài Nghiên Cứu (Project Tag)</span>
+                <span>Gắn Thẻ Đề Tài Nghiên Cứu <span className="text-rose-500">*</span></span>
               </label>
-              <span className="text-[11px] text-slate-500 font-medium">
+              <span className="text-xs text-slate-500 font-medium">
                 Hạch toán vật tư theo đề tài
               </span>
             </div>
@@ -411,6 +419,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <select
                   value={selectedProjectId}
                   onChange={(e) => handleProjectSelect(e.target.value)}
+                  required
                   className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white font-medium focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
                 >
                   <option value="">-- Chọn đề tài nghiên cứu đã đăng ký --</option>
@@ -445,17 +454,17 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <div className="p-2.5 rounded-lg bg-indigo-50/70 border border-indigo-200 text-xs flex items-center justify-between gap-3 text-indigo-950">
                   <div className="space-y-0.5 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold px-1.5 py-0.5 rounded-md bg-indigo-200/80 text-indigo-900 text-[11px]">
+                      <span className="font-mono font-bold px-1.5 py-0.5 rounded-md bg-indigo-200/80 text-indigo-900 text-xs">
                         {proj.code}
                       </span>
                       <span className="font-semibold truncate">{proj.name}</span>
                     </div>
-                    <div className="text-[11px] text-indigo-700">
+                    <div className="text-xs text-indigo-700">
                       Chủ nhiệm (PI): <strong>{proj.principalInvestigator}</strong> · {proj.department}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="block text-[10px] text-indigo-600 font-medium">Định mức vật tư:</span>
+                    <span className="block text-xs text-indigo-600 font-medium">Định mức vật tư:</span>
                     <span className="font-mono font-bold text-emerald-700">
                       {proj.materialBudgetVND.toLocaleString('vi-VN')} ₫
                     </span>
@@ -476,13 +485,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <Package className="w-3.5 h-3.5 text-amber-600" />
                 <span>Dự Trù Vật Tư Tiêu Hao Cho Phiên Này</span>
                 {plannedSupplies.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
                     {plannedSupplies.length} loại vật tư
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500">
+              <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
                 <span>
                   Ước tính: <strong className="text-slate-800">{plannedSupplies.reduce((acc, s) => acc + s.totalCostVND, 0).toLocaleString('vi-VN')} ₫</strong>
                 </span>
@@ -492,7 +501,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
             {isSuppliesAccordionOpen && (
               <div className="p-3.5 bg-white space-y-3 border-t border-slate-100">
-                <p className="text-[11px] text-slate-500">
+                <p className="text-xs text-slate-500">
                   Chọn các vật tư dự kiến sử dụng để hệ thống tự động trừ kho và hạch toán vào báo cáo tiêu hao của đề tài:
                 </p>
 
@@ -505,7 +514,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         key={sup.id}
                         type="button"
                         onClick={() => handleAddSupply(sup, 1)}
-                        className={`px-2.5 py-1 rounded-md text-[11px] transition-all flex items-center gap-1 border ${
+                        className={`px-2.5 py-1 rounded-md text-xs transition-all flex items-center gap-1 border ${
                           isAdded
                             ? 'bg-amber-100 border-amber-300 text-amber-900 font-bold'
                             : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
@@ -513,7 +522,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                       >
                         <Plus className="w-3 h-3 text-slate-400" />
                         <span>{sup.name}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">({sup.unitCostVND.toLocaleString('vi-VN')}₫/{sup.unit})</span>
+                        <span className="text-xs text-slate-400 font-mono">({sup.unitCostVND.toLocaleString('vi-VN')}₫/{sup.unit})</span>
                       </button>
                     );
                   })}
@@ -522,7 +531,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 {/* Selected Supplies Table */}
                 {plannedSupplies.length > 0 && (
                   <div className="space-y-1.5 pt-1">
-                    <span className="font-semibold text-slate-700 text-[11px]">Danh sách vật tư dự trù:</span>
+                    <span className="font-semibold text-slate-700 text-xs">Danh sách vật tư dự trù:</span>
                     <div className="space-y-1">
                       {plannedSupplies.map((item) => {
                         const supMatch = catalogSupplies.find((c) => c.id === item.supplyId);
@@ -533,7 +542,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                           >
                             <div className="min-w-0">
                               <span className="font-semibold text-slate-900 block truncate">{item.supplyName}</span>
-                              <span className="text-[10px] text-slate-500 font-mono">
+                              <span className="text-xs text-slate-500 font-mono">
                                 Đơn giá: {item.unitCostVND.toLocaleString('vi-VN')} ₫ / {item.unit}
                               </span>
                             </div>
@@ -586,6 +595,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
             />
           </div>
+
+          <p className="text-xs sm:text-xs text-slate-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <strong>Ghi chú:</strong> Bộ môn chỉ mở cửa từ thứ Hai đến thứ Sáu, từ 07:30 đến 17:00.
+          </p>
 
           {/* Modal Actions */}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">

@@ -9,6 +9,19 @@ import {
   User 
 } from '../types';
 import { LabStorage, localDateStr } from '../services/storage';
+import { DEPARTMENT_OPTIONS } from '../data/departments';
+
+/** Mã tự động: chữ cái đầu của mỗi từ tên đề tài + năm bắt đầu, vd. "Nghiên cứu nano" 2026 → NCN-2026. */
+export const genProjectCode = (name: string, year: string, existing: { code: string }[], exceptCode = ''): string => {
+  const words = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
+    .split(/[^A-Za-z0-9]+/).filter(Boolean);
+  const abbr = words.map((w) => w.charAt(0)).join('').toUpperCase().slice(0, 8) || 'DT';
+  const taken = new Set(existing.map((p) => p.code.toUpperCase()).filter((c) => c !== exceptCode.toUpperCase()));
+  const base = `${abbr}-${year}`;
+  let code = base;
+  for (let k = 2; taken.has(code); k++) code = `${base}-${k}`;
+  return code;
+};
 import { 
   FolderGit2, 
   Plus, 
@@ -36,7 +49,8 @@ import {
   HelpCircle,
   ExternalLink,
   Zap,
-  Printer
+  Printer,
+  Pencil,
 } from 'lucide-react';
 
 interface ProjectTrackingViewProps {
@@ -82,22 +96,55 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
     materialBudgetVND: number;
     colorTag: 'indigo' | 'emerald' | 'amber' | 'rose' | 'sky' | 'purple';
     description: string;
+    leadAgency: string;
   }>({
     code: '',
     name: '',
+    leadAgency: '',
     principalInvestigator: currentUser.name,
     piEmail: currentUser.email,
-    department: currentUser.department || 'Phòng Thí nghiệm Phân tích',
+    department: DEPARTMENT_OPTIONS.includes(currentUser.department) ? currentUser.department : DEPARTMENT_OPTIONS[0],
     fundingAgency: 'Quỹ NAFOSTED / Đề tài cấp Bộ',
     startDate: localDateStr(),
     endDate: localDateStr(new Date(new Date().setFullYear(new Date().getFullYear() + 1))),
-    budgetTotalVND: 300000000,
-    materialBudgetVND: 50000000,
+    budgetTotalVND: 0,
+    materialBudgetVND: 0,
     colorTag: 'indigo',
     description: '',
   });
 
   const [formError, setFormError] = useState<string | null>(null);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+
+  /** Mở form: để trống = đăng ký mới; có proj = điều chỉnh thông tin đề tài đã đăng ký. */
+  const openProjectForm = (proj?: ResearchProject) => {
+    setFormError(null);
+    if (proj) {
+      setEditingProjectId(proj.id);
+      setNewProjectData({
+        code: proj.code,
+        name: proj.name,
+        leadAgency: proj.leadAgency || '',
+        principalInvestigator: proj.principalInvestigator,
+        piEmail: proj.piEmail || '',
+        department: DEPARTMENT_OPTIONS.includes(proj.department) ? proj.department : 'Khác',
+        fundingAgency: proj.fundingAgency || '',
+        startDate: proj.startDate,
+        endDate: proj.endDate,
+        budgetTotalVND: proj.budgetTotalVND || 0,
+        materialBudgetVND: proj.materialBudgetVND || 0,
+        colorTag: proj.colorTag || 'indigo',
+        description: proj.description || '',
+      });
+      setDeptOther(DEPARTMENT_OPTIONS.includes(proj.department) ? '' : proj.department);
+    } else {
+      setEditingProjectId(null);
+      setDeptOther('');
+      setNewProjectData((d) => ({ ...d, code: '', name: '', leadAgency: '', description: '' }));
+    }
+    setIsAddModalOpen(true);
+  };
+  const [deptOther, setDeptOther] = useState<string>('');
 
   // Helper maps
   const eqMap = useMemo(() => new Map(equipmentList.map((e) => [e.id, e])), [equipmentList]);
@@ -221,37 +268,46 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
     e.preventDefault();
     setFormError(null);
 
-    if (!newProjectData.code.trim()) {
-      setFormError('Vui lòng nhập Mã đề tài / dự án.');
-      return;
-    }
     if (!newProjectData.name.trim()) {
       setFormError('Vui lòng nhập Tên đề tài nghiên cứu.');
       return;
     }
     if (!newProjectData.principalInvestigator.trim()) {
-      setFormError('Vui lòng nhập Tên chủ nhiệm đề tài (PI).');
+      setFormError('Vui lòng nhập Chủ nhiệm đề tài / GV hướng dẫn.');
+      return;
+    }
+    const editing = editingProjectId ? projects.find((p) => p.id === editingProjectId) : undefined;
+    const year = (newProjectData.startDate || localDateStr()).slice(0, 4);
+    const code = newProjectData.code.trim().toUpperCase()
+      || genProjectCode(newProjectData.name, year, projects, editing?.code || '');
+
+    // Check duplicate code
+    const existing = projects.find((p) => p.code.toLowerCase() === code.toLowerCase() && p.id !== editingProjectId);
+    if (existing) {
+      setFormError(`Mã đề tài "${code}" đã tồn tại. Hãy nhập mã khác hoặc để trống để hệ thống tự tạo.`);
       return;
     }
 
-    // Check duplicate code
-    const existing = projects.find((p) => p.code.toLowerCase() === newProjectData.code.trim().toLowerCase());
-    if (existing) {
-      setFormError(`Mã đề tài "${newProjectData.code.trim()}" đã tồn tại.`);
+    const department = newProjectData.department === 'Khác' ? deptOther.trim() : newProjectData.department;
+    if (!department) {
+      setFormError('Vui lòng chọn hoặc nhập Nơi thực hiện đề tài.');
       return;
     }
 
     const newProj: ResearchProject = {
       ...newProjectData,
-      id: `proj-${Date.now()}`,
-      code: newProjectData.code.trim().toUpperCase(),
+      department,
+      id: editing?.id ?? `proj-${Date.now()}`,
+      code,
       name: newProjectData.name.trim(),
-      status: 'active',
-      createdAt: new Date().toISOString(),
+      leadAgency: newProjectData.leadAgency.trim(),
+      status: editing?.status ?? 'active',
+      createdAt: editing?.createdAt ?? new Date().toISOString(),
     };
 
     LabStorage.upsertProject(newProj);
     setIsAddModalOpen(false);
+    setEditingProjectId(null);
     setSelectedProjectId(newProj.id);
     if (onRefresh) onRefresh();
   };
@@ -280,7 +336,7 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
               Quản Lý Dự Án Nghiên Cứu & Tiêu Hao Vật Tư
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
               Project Tracking
             </span>
           </div>
@@ -299,11 +355,11 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
           </button>
 
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => openProjectForm()}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-xs transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Thêm Đề Tài Mới</span>
+            <span>Đăng ký đề tài mới</span>
           </button>
         </div>
       </div>
@@ -319,7 +375,7 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
           <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
             {projects.length} <span className="text-xs font-normal text-slate-400">dự án</span>
           </div>
-          <div className="text-[11px] text-emerald-600 flex items-center gap-1">
+          <div className="text-xs text-emerald-600 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
             <span>{projects.filter((p) => p.status === 'active').length} đề tài đang thực hiện</span>
           </div>
@@ -334,7 +390,7 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
           <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
             {(totalApprovedMaterialBudget / 1000000).toFixed(1)} <span className="text-xs font-normal text-slate-400">triệu VNĐ</span>
           </div>
-          <div className="text-[11px] text-slate-500 font-mono">
+          <div className="text-xs text-slate-500 font-mono">
             {totalApprovedMaterialBudget.toLocaleString('vi-VN')} ₫
           </div>
         </div>
@@ -348,7 +404,7 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
           <div className="text-2xl font-bold font-mono text-amber-900 tabular-nums">
             {(totalActualMaterialCost / 1000000).toFixed(2)} <span className="text-xs font-normal text-slate-400">triệu VNĐ</span>
           </div>
-          <div className="text-[11px] text-slate-500 flex items-center justify-between">
+          <div className="text-xs text-slate-500 flex items-center justify-between">
             <span>Tỷ lệ giải ngân:</span>
             <span className="font-bold text-slate-700">{overallBudgetPercentage}%</span>
           </div>
@@ -363,7 +419,7 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
           <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
             {totalResearchHours.toFixed(1)} <span className="text-xs font-normal text-slate-400">giờ</span>
           </div>
-          <div className="text-[11px] text-slate-500">
+          <div className="text-xs text-slate-500">
             Tổng hợp qua {logs.filter((l) => Boolean(l.projectId || l.projectCode)).length} ca đo thực tế
           </div>
         </div>
@@ -443,9 +499,19 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
                   <span className={`px-2.5 py-1 rounded-lg font-mono text-xs font-bold border ${colorStyles.pill}`}>
                     {proj.code}
                   </span>
+                  {(proj.createdBy === currentUser.id || currentUser.role === 'admin') && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openProjectForm(proj); }}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold text-indigo-700 hover:bg-indigo-50 border border-indigo-200"
+                      title="Điều chỉnh thông tin đề tài"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      <span>Sửa</span>
+                    </button>
+                  )}
 
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
                       proj.status === 'active'
                         ? 'bg-emerald-100 text-emerald-800'
                         : proj.status === 'completed'
@@ -475,10 +541,11 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
                 </div>
               </div>
 
-              {/* Material Budget Progress Bar */}
+              {/* Material Budget Progress Bar (chỉ hiện khi có định mức) */}
+              {proj.materialBudgetVND > 0 && (
               <div className="space-y-1.5 pt-2 border-t border-slate-100">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 text-[11px]">Định mức vật tư tiêu hao:</span>
+                  <span className="text-slate-500 text-xs">Định mức vật tư tiêu hao:</span>
                   <span className="font-mono font-bold text-slate-900">
                     {(summary?.totalMaterialCostVND || 0).toLocaleString('vi-VN')} ₫ <span className="font-normal text-slate-400">/ {proj.materialBudgetVND.toLocaleString('vi-VN')} ₫</span>
                   </span>
@@ -493,15 +560,16 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-400">Đã tiêu hao: <strong className="text-slate-700">{pct}%</strong></span>
                   <span className="text-slate-500 font-mono">Còn: {(summary?.remainingMaterialBudgetVND || 0).toLocaleString('vi-VN')} ₫</span>
                 </div>
               </div>
+              )}
 
               {/* Metrics & Booking Action */}
               <div className="pt-2 flex items-center justify-between border-t border-slate-100 text-xs">
-                <div className="flex items-center gap-3 text-[11px] text-slate-600 font-mono">
+                <div className="flex items-center gap-3 text-xs text-slate-600 font-mono">
                   <span><strong>{summary?.totalBookingsCount || 0}</strong> ca</span>
                   <span>·</span>
                   <span><strong>{summary?.totalActualHours || 0}</strong>h máy</span>
@@ -696,25 +764,25 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
                       <tr key={log.id} className="hover:bg-slate-50/70 transition-colors">
                         <td className="py-2.5 px-3 font-mono">
                           <span className="block font-bold text-slate-900">{log.id}</span>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-xs text-slate-400">
                             {new Date(log.checkInTime).toLocaleDateString('vi-VN')} {new Date(log.checkInTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </td>
 
                         <td className="py-2.5 px-3">
-                          <span className="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          <span className="px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                             {proj ? proj.code : (log.projectCode || 'N/A')}
                           </span>
                         </td>
 
                         <td className="py-2.5 px-3">
                           <span className="font-mono font-bold text-slate-800">{eq?.code}</span>
-                          <span className="block text-[11px] text-slate-500 truncate max-w-[140px]">{eq?.name}</span>
+                          <span className="block text-xs text-slate-500 truncate max-w-[140px]">{eq?.name}</span>
                         </td>
 
                         <td className="py-2.5 px-3">
                           <span className="font-medium text-slate-900">{u?.name || log.userId}</span>
-                          <span className="block text-[10px] text-slate-400">{u?.department}</span>
+                          <span className="block text-xs text-slate-400">{u?.department}</span>
                         </td>
 
                         <td className="py-2.5 px-3 text-center font-mono">
@@ -729,7 +797,7 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
                           {log.consumedSupplies && log.consumedSupplies.length > 0 ? (
                             <div className="space-y-0.5">
                               {log.consumedSupplies.map((s, idx) => (
-                                <div key={idx} className="text-[11px]">
+                                <div key={idx} className="text-xs">
                                   • {s.supplyName}: <strong>{s.quantity} {s.unit}</strong>
                                 </div>
                               ))}
@@ -762,7 +830,7 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
                   <FolderGit2 className="w-4 h-4" />
                 </span>
                 <h3 className="text-base font-bold text-slate-900">
-                  Đăng Ký Đề Tài Nghiên Cứu Mới
+                  {editingProjectId ? 'Điều Chỉnh Thông Tin Đề Tài' : 'Đăng ký đề tài nghiên cứu mới'}
                 </h3>
               </div>
               <button
@@ -782,38 +850,33 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
 
             <form onSubmit={handleAddProjectSubmit} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Project Code */}
+                {/* Project Code (tự tạo nếu để trống) */}
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    Mã Đề Tài / Dự Án <span className="text-rose-500">*</span>
+                    Mã Đề Tài / Dự Án <span className="text-slate-400 font-normal">(không bắt buộc)</span>
                   </label>
                   <input
                     type="text"
-                    required
                     value={newProjectData.code}
                     onChange={(e) => setNewProjectData({ ...newProjectData, code: e.target.value })}
-                    placeholder="VD: DT-VAST-2026, NCS-MAT-01"
+                    placeholder={`Tự tạo: ${genProjectCode(newProjectData.name || 'Tên đề tài', (newProjectData.startDate || localDateStr()).slice(0, 4), projects, editingProjectId ? projects.find((p) => p.id === editingProjectId)?.code || '' : '')}`}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono font-bold focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 uppercase"
                   />
+                  <span className="text-xs text-slate-400 mt-0.5 block">Để trống: tạo từ chữ cái đầu tên đề tài và năm bắt đầu.</span>
                 </div>
 
-                {/* Color Tag */}
+                {/* Cơ quan chủ trì */}
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    Màu Thẻ Tag Nhận Diện
+                    Cơ Quan Chủ Trì
                   </label>
-                  <select
-                    value={newProjectData.colorTag}
-                    onChange={(e) => setNewProjectData({ ...newProjectData, colorTag: e.target.value as any })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 font-semibold focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
-                  >
-                    <option value="indigo">Indigo (Xanh chàm truyền thống)</option>
-                    <option value="emerald">Emerald (Xanh lục sinh thái)</option>
-                    <option value="amber">Amber (Vàng hổ phách)</option>
-                    <option value="rose">Rose (Đỏ hoa hồng)</option>
-                    <option value="sky">Sky (Xanh da trời)</option>
-                    <option value="purple">Purple (Tím thạch anh)</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={newProjectData.leadAgency}
+                    onChange={(e) => setNewProjectData({ ...newProjectData, leadAgency: e.target.value })}
+                    placeholder="VD: Trường Đại học Y Dược TP.HCM"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                  />
                 </div>
               </div>
 
@@ -836,7 +899,7 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
                 {/* Principal Investigator */}
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    Chủ Nhiệm Đề Tài (PI) <span className="text-rose-500">*</span>
+                    Chủ Nhiệm Đề Tài / GV Hướng Dẫn <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -848,18 +911,29 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
                   />
                 </div>
 
-                {/* Department */}
+                {/* Nơi thực hiện đề tài */}
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    Khoa / Viện / Đơn Vị Chủ Trì
+                    Nơi Thực Hiện Đề Tài <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={newProjectData.department}
                     onChange={(e) => setNewProjectData({ ...newProjectData, department: e.target.value })}
-                    placeholder="VD: Khoa Hóa học & Môi trường"
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
-                  />
+                  >
+                    {DEPARTMENT_OPTIONS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                  {newProjectData.department === 'Khác' && (
+                    <input
+                      type="text"
+                      value={deptOther}
+                      onChange={(e) => setDeptOther(e.target.value)}
+                      placeholder="Nhập tên bộ môn / trung tâm"
+                      className="mt-2 w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -876,25 +950,6 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
                     placeholder="VD: Quỹ NAFOSTED, Đề tài cấp Viện..."
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
                   />
-                </div>
-
-                {/* Material Budget VND */}
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Định Mức Ngân Sách Vật Tư Tiêu Hao (VNĐ) <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min={1000000}
-                    step={1000000}
-                    value={newProjectData.materialBudgetVND}
-                    onChange={(e) => setNewProjectData({ ...newProjectData, materialBudgetVND: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono font-bold focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
-                  />
-                  <span className="text-[11px] text-slate-400 mt-0.5 block">
-                    Được dùng để tính tỷ lệ % cảnh báo vượt định mức
-                  </span>
                 </div>
               </div>
 
