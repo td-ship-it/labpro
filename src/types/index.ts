@@ -62,6 +62,8 @@ export interface Equipment {
   safetyGuidelines: string;
   maxBookingHoursPerSession: number;
   trainedUserIds?: string[]; // Danh sách người đã được tập huấn sử dụng máy
+  purposeOptions?: string[]; // Mục đích thí nghiệm thả chọn (Admin điều chỉnh; trống = mặc định theo loại thiết bị)
+  checklistItems?: string[]; // Danh mục tick chọn khi hoàn tất ca (trống = mặc định)
   maintenanceSchedule?: string;
   responsibleStaff: string;
   // Documentation, SOP, and Video for QR Quick Hub
@@ -247,6 +249,10 @@ export interface UsageLog {
   materialCostVND?: number;
   operatorNotes: string;
   supervisorNotes?: string;
+  /** auto: hệ thống tự check-out; not_used: đã xác nhận không dùng; no_checkin: hết ca không check-in */
+  logType?: 'auto' | 'not_used' | 'no_checkin';
+  /** Ca do hệ thống tự check-out, cần người dùng nhập lại số lượng mẫu và tình trạng máy */
+  needsReentry?: boolean;
 }
 
 export type EmailNotificationType = 

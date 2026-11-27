@@ -178,7 +178,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-            Quản lý lịch & nhật ký thiết bị khoa học
+            Quản lý lịch & nhật ký<br /> thiết bị khoa học
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">

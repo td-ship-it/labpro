@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Equipment, EquipmentCategory } from '../types';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, Plus } from 'lucide-react';
+import { purposeOptionsOf, DEFAULT_CHECKLIST } from '../data/equipmentDefaults';
 import { LabStorage } from '../services/storage';
 
 interface EquipmentModalProps {
@@ -30,6 +31,8 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
   const [status, setStatus] = useState<Equipment['status']>('available');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [trainedIds, setTrainedIds] = useState<string[]>([]);
+  const [purposeOpts, setPurposeOpts] = useState<string[]>([]);
+  const [checklistOpts, setChecklistOpts] = useState<string[]>([]);
   const allUsers = LabStorage.getUsers().filter((u) => u.role !== 'admin' && u.status === 'active');
 
   useEffect(() => {
@@ -45,6 +48,8 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
       setSafetyGuidelines(equipmentToEdit.safetyGuidelines);
       setMaxHours(equipmentToEdit.maxBookingHoursPerSession);
       setTrainedIds(equipmentToEdit.trainedUserIds || []);
+      setPurposeOpts(equipmentToEdit.purposeOptions || []);
+      setChecklistOpts(equipmentToEdit.checklistItems || []);
       setResponsibleStaff(equipmentToEdit.responsibleStaff);
       setStatus(equipmentToEdit.status);
     } else {
@@ -59,6 +64,8 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
       setSafetyGuidelines('Tuân thủ nghiêm ngặt quy định phòng thí nghiệm và bảo hộ lao động cá nhân.');
       setMaxHours(4);
       setTrainedIds([]);
+      setPurposeOpts([]);
+      setChecklistOpts([]);
       setResponsibleStaff('');
       setStatus('available');
     }
@@ -87,6 +94,8 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
       safetyGuidelines: safetyGuidelines.trim(),
       maxBookingHoursPerSession: Math.max(1, Number(maxHours) || 1),
       trainedUserIds: trainedIds,
+      purposeOptions: purposeOpts,
+      checklistItems: checklistOpts,
       responsibleStaff: responsibleStaff.trim() || 'Quản lý phòng máy',
       status,
     };
@@ -144,6 +153,24 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
             </div>
             <p className="text-xs text-slate-500 mt-1">Đã chọn: {trainedIds.length} người</p>
           </div>
+
+          <ListEditor
+            title="Mục đích thí nghiệm (thả chọn khi đăng ký)"
+            hint="Người đăng ký chọn một mục đích từ danh sách này, hoặc nhập chi tiết nếu không có mục phù hợp."
+            items={purposeOpts}
+            setItems={setPurposeOpts}
+            defaults={purposeOptionsOf({ category, purposeOptions: [] })}
+            placeholder="VD: Xây dựng đường chuẩn"
+          />
+
+          <ListEditor
+            title="Danh mục tick chọn khi hoàn tất ca"
+            hint="Người vận hành tick chọn các việc đã làm trước khi trả máy (thay cho ghi chú mặc định)."
+            items={checklistOpts}
+            setItems={setChecklistOpts}
+            defaults={DEFAULT_CHECKLIST}
+            placeholder="VD: Đã tắt đèn quang phổ"
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -348,6 +375,64 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
           </div>
         </form>
       </div>
+    </div>
+  );
+};
+
+/** Danh sách chuỗi có thể thêm / xóa. Để trống = dùng thông tin mặc định theo loại thiết bị. */
+const ListEditor: React.FC<{
+  title: string;
+  hint: string;
+  items: string[];
+  setItems: (items: string[]) => void;
+  defaults: string[];
+  placeholder: string;
+}> = ({ title, hint, items, setItems, defaults, placeholder }) => {
+  const [draft, setDraft] = useState('');
+  const add = () => {
+    const v = draft.trim();
+    if (!v || items.includes(v)) { setDraft(''); return; }
+    setItems([...items, v]);
+    setDraft('');
+  };
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-slate-700 mb-1">{title}</label>
+      <p className="text-xs text-slate-500 mb-1.5">{hint}</p>
+      <div className="flex gap-2 mb-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
+          placeholder={placeholder}
+          className="flex-1 text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+        />
+        <button type="button" onClick={add} className="px-3 py-2 text-xs font-semibold text-white bg-slate-700 hover:bg-slate-800 rounded-lg flex items-center gap-1">
+          <Plus className="w-3.5 h-3.5" /> Thêm
+        </button>
+      </div>
+      {items.length === 0 ? (
+        <div className="text-xs text-slate-500 bg-slate-50 border border-dashed border-slate-300 rounded-lg p-2 flex flex-wrap items-center justify-between gap-2">
+          <span>Đang dùng mặc định: {defaults.join(' · ')}</span>
+          <button type="button" onClick={() => setItems([...defaults])} className="text-blue-700 hover:underline font-semibold">
+            Chỉnh riêng cho máy này
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {items.map((it) => (
+            <div key={it} className="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg">
+              <span className="text-slate-800">{it}</span>
+              <button type="button" onClick={() => setItems(items.filter((x) => x !== it))} className="text-slate-400 hover:text-rose-600">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setItems([])} className="text-xs text-slate-600 hover:underline">
+            Khôi phục mặc định theo loại thiết bị
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -334,6 +334,8 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                   const user = userMap.get(log.userId);
                   const inDate = new Date(log.checkInTime);
                   const outDate = log.checkOutTime ? new Date(log.checkOutTime) : null;
+                  const isNoUse = log.logType === 'not_used' || log.logType === 'no_checkin';
+                  const flaggedNote = !!log.needsReentry || log.logType === 'auto' || isNoUse;
                   const hasIncident = log.incidentReport?.hasIncident;
 
                   return (
@@ -381,7 +383,11 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                           Vào: {inDate.toLocaleTimeString('vi-VN')} ({inDate.toLocaleDateString('vi-VN')})
                         </div>
                         <div className="text-slate-600 mt-0.5">
-                          Ra: {outDate ? `${outDate.toLocaleTimeString('vi-VN')} (${outDate.toLocaleDateString('vi-VN')})` : (
+                          Ra: {isNoUse ? (
+                            <span className="text-slate-500 font-semibold">Không sử dụng máy</span>
+                          ) : log.needsReentry ? (
+                            <span className="text-rose-600 font-bold">Chờ bổ sung thông tin</span>
+                          ) : outDate ? `${outDate.toLocaleTimeString('vi-VN')} (${outDate.toLocaleDateString('vi-VN')})` : (
                             <span className="text-amber-600 font-bold">Đang chạy...</span>
                           )}
                         </div>
@@ -436,7 +442,10 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
 
                       {/* Operator Notes */}
                       <td className="py-3 px-4">
-                        <p className="text-xs text-slate-600 max-w-[200px] truncate" title={log.operatorNotes}>
+                        <p
+                          className={`text-xs max-w-[200px] truncate ${flaggedNote ? 'text-rose-600 font-bold' : 'text-slate-600'}`}
+                          title={log.operatorNotes}
+                        >
                           {log.operatorNotes || 'Không có ghi chú'}
                         </p>
                       </td>
@@ -598,7 +607,11 @@ export const UsageLogbook: React.FC<UsageLogbookProps> = ({
                 <label className="text-slate-500 font-semibold block mb-1">
                   Ghi chú của người vận hành:
                 </label>
-                <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-slate-700 whitespace-pre-wrap">
+                <div
+                  className={`p-2.5 bg-slate-50 rounded-lg border border-slate-200 whitespace-pre-wrap ${
+                    selectedLogDetail.needsReentry || selectedLogDetail.logType ? 'text-rose-600 font-bold' : 'text-slate-700'
+                  }`}
+                >
                   {selectedLogDetail.operatorNotes || 'Không có ghi chú'}
                 </div>
               </div>

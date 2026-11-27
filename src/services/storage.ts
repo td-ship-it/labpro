@@ -22,7 +22,8 @@ import {
   ConsumedSupplyItem,
   AiDocMeta,
 } from '../types';
-import { buildUsageCsv, DEFAULT_USAGE_FIELDS } from './usageExport';
+import { buildUsageSheet, DEFAULT_USAGE_FIELDS } from './usageExport';
+import { downloadXlsx } from './xlsxWriter';
 import { callApi, getToken, setToken, setAuthLostHandler, ApiError, ApiResponse } from './api';
 
 interface Store {
@@ -651,6 +652,7 @@ export const LabStorage = {
     logId: string;
     finalCondition: MachineCondition;
     operatorNotesAddendum?: string;
+    conditionNote?: string;
     supervisorNotes?: string;
     incidentReport?: IncidentReport;
     sampleCount?: number;
@@ -661,6 +663,32 @@ export const LabStorage = {
       return { success: true, log: data.log };
     } catch (e) {
       return { success: false, error: errMsg(e, 'Lỗi khi trả máy.') };
+    }
+  },
+
+  /** Người đăng ký xác nhận không sử dụng máy (tắt cảnh báo, ghi nhận vào nhật ký). */
+  async dismissNoShow(bookingId: string): Promise<{ success: boolean; log?: UsageLog; error?: string }> {
+    try {
+      const data = await call('dismissNoShow', { bookingId });
+      return { success: true, log: data.log };
+    } catch (e) {
+      return { success: false, error: errMsg(e, 'Không thể xác nhận.') };
+    }
+  },
+
+  /** Bổ sung số lượng mẫu và tình trạng máy cho nhật ký do hệ thống tự check-out. */
+  async completeLogDetails(params: {
+    logId: string;
+    sampleCount: number;
+    finalCondition: MachineCondition;
+    conditionNote?: string;
+    operatorNotesAddendum?: string;
+  }): Promise<{ success: boolean; log?: UsageLog; error?: string }> {
+    try {
+      const data = await call('completeLogDetails', params);
+      return { success: true, log: data.log };
+    } catch (e) {
+      return { success: false, error: errMsg(e, 'Không thể cập nhật nhật ký.') };
     }
   },
 
@@ -1087,22 +1115,14 @@ export const LabStorage = {
       ['Số sự cố ghi nhận', `${incidentCount} vụ`],
     ];
 
-    const csvContent = buildUsageCsv({
+    const sheet = buildUsageSheet({
       logs: filteredLogs,
       eqMap,
       userMap,
       fields: params.fields && params.fields.length ? params.fields : DEFAULT_USAGE_FIELDS,
       summary,
     });
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
     const safeEqName = selectedEq ? selectedEq.code : 'Tat_ca_thiet_bi';
-    link.download = `Bao_cao_su_dung_${safeEqName}_${startDate || 'dau'}_den_${endDate || 'nay'}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    downloadXlsx(`Bao_cao_su_dung_${safeEqName}_${startDate || 'dau'}_den_${endDate || 'nay'}`, [sheet]);
   },
 };

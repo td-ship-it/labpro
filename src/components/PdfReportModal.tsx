@@ -1,4 +1,5 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
+import { downloadElementAsPdf } from '../services/pdfExport';
 import { Equipment, User, Booking, UsageLog } from '../types';
 import { 
   X, 
@@ -47,6 +48,8 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
   currentUser,
 }) => {
   const reportRef = useRef<HTMLDivElement>(null);
+  const [pdfBusy, setPdfBusy] = useState<boolean>(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -74,6 +77,24 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
   const totalHours = (totalMinutes / 60).toFixed(1);
   const totalSamples = filteredLogs.reduce((acc, l) => acc + (l.sampleCount || 0), 0);
   const incidentLogs = filteredLogs.filter((l) => l.incidentReport?.hasIncident);
+  // Bảng nhật ký sắp xếp từ cũ đến mới (thời gian sử dụng xa nhất → gần nhất)
+  const sortedLogs = filteredLogs.slice().sort((a, b) => a.checkInTime.localeCompare(b.checkInTime));
+
+  const handleDownloadPdf = async () => {
+    const node = document.getElementById('printable-report');
+    if (!node) return;
+    setPdfBusy(true);
+    setPdfError(null);
+    try {
+      const eq = selectedEquipmentId !== 'all' ? equipmentList.find((e) => e.id === selectedEquipmentId) : null;
+      const name = `Bao_cao_su_dung_${eq ? eq.code : 'tat_ca_thiet_bi'}_${startDate || 'dau'}_den_${endDate || 'nay'}`;
+      await downloadElementAsPdf(node, name);
+    } catch (err) {
+      setPdfError('Không tạo được file PDF: ' + (err instanceof Error ? err.message : 'lỗi không xác định') + '. Bạn có thể dùng nút In và chọn "Lưu dưới dạng PDF".');
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   const handlePrint = () => {
     // Chỉ in vùng báo cáo (không in phần giao diện bên dưới), để bản in giống hệt bản xem trước
@@ -108,11 +129,19 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
 
           <div className="flex items-center gap-2">
             <button
+              onClick={handleDownloadPdf}
+              disabled={pdfBusy}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors disabled:opacity-60"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>{pdfBusy ? 'Đang tạo PDF...' : 'Tải File PDF'}</span>
+            </button>
+            <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg shadow-xs transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>In Báo Cáo / Lưu PDF</span>
+              <span>In</span>
             </button>
             <button
               onClick={onClose}
@@ -122,6 +151,10 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
             </button>
           </div>
         </div>
+
+        {pdfError && (
+          <div className="px-6 py-2.5 text-xs text-rose-700 bg-rose-50 border-b border-rose-200 print:hidden">{pdfError}</div>
+        )}
 
         {/* Scrollable Printable A4 Report Content */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-10 bg-slate-100/50 print:bg-white print:p-0 print:overflow-visible">
@@ -265,18 +298,20 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {filteredLogs.length === 0 ? (
+                    {sortedLogs.length === 0 ? (
                       <tr>
                         <td colSpan={8} className="p-6 text-center text-slate-400 italic">
                           Không có dữ liệu nhật ký nào trong khoảng thời gian và thiết bị đã chọn.
                         </td>
                       </tr>
                     ) : (
-                      filteredLogs.map((log, index) => {
+                      sortedLogs.map((log, index) => {
                         const eq = eqMap.get(log.equipmentId);
                         const user = userMap.get(log.userId);
                         const inDate = new Date(log.checkInTime);
                         const hasInc = log.incidentReport?.hasIncident;
+                        // Ca tự check-out / không sử dụng / chờ bổ sung: ghi chú in đậm, màu đỏ
+                        const flaggedNote = !!log.needsReentry || log.logType === 'auto' || log.logType === 'not_used' || log.logType === 'no_checkin';
 
                         return (
                           <tr key={log.id} className="hover:bg-slate-50/50">
@@ -310,7 +345,7 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({
                                 <span className="text-emerald-700 font-medium">Hoạt động tốt</span>
                               )}
                             </td>
-                            <td className="p-2 text-slate-600 text-xs min-w-[140px] whitespace-normal break-words">
+                            <td className={`p-2 text-xs min-w-[140px] whitespace-normal break-words ${flaggedNote ? 'text-rose-600 font-bold' : 'text-slate-600'}`}>
                               {log.operatorNotes || '---'}
                             </td>
                           </tr>

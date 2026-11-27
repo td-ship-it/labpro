@@ -1,4 +1,5 @@
 import { Equipment, MachineCondition, UsageLog, User } from '../types';
+import type { XlsxSheet, XlsxStyle, XlsxValue } from './xlsxWriter';
 
 /**
  * Các trường có thể chọn khi xuất file Excel (CSV) báo cáo sử dụng thiết bị.
@@ -22,6 +23,9 @@ const cond = (c?: MachineCondition) => {
 
 const time = (iso?: string) => (iso ? new Date(iso).toLocaleString('vi-VN') : '');
 
+/** Ca đăng ký nhưng không sử dụng máy (không check-in hoặc đã xác nhận không dùng). */
+export const isNoUse = (l: UsageLog) => l.logType === 'not_used' || l.logType === 'no_checkin';
+
 export const USAGE_EXPORT_FIELDS: UsageExportField[] = [
   { key: 'stt', label: 'STT', value: () => '' }, // điền theo thứ tự dòng khi xuất
   { key: 'logId', label: 'Mã nhật ký', value: (l) => l.id },
@@ -32,11 +36,11 @@ export const USAGE_EXPORT_FIELDS: UsageExportField[] = [
   { key: 'dept', label: 'Bộ môn / Trung tâm', value: (_l, _e, u) => u?.department || '' },
   { key: 'project', label: 'Mã đề tài', value: (l) => l.projectCode || '' },
   { key: 'checkIn', label: 'Thời điểm check-in', value: (l) => time(l.checkInTime) },
-  { key: 'checkOut', label: 'Thời điểm check-out', value: (l) => (l.checkOutTime ? time(l.checkOutTime) : 'Đang chạy') },
+  { key: 'checkOut', label: 'Thời điểm check-out', value: (l) => (isNoUse(l) ? '' : l.checkOutTime ? time(l.checkOutTime) : 'Đang chạy') },
   { key: 'duration', label: 'Thời gian dùng (phút)', value: (l) => l.durationMinutes || 0 },
   { key: 'samples', label: 'Số lượng mẫu', value: (l) => l.sampleCount || 0 },
-  { key: 'initCond', label: 'Tình trạng trước khi dùng', value: (l) => cond(l.initialCondition) },
-  { key: 'finalCond', label: 'Tình trạng sau khi dùng', value: (l) => cond(l.finalCondition) },
+  { key: 'initCond', label: 'Tình trạng trước khi dùng', value: (l) => (isNoUse(l) ? 'Không sử dụng' : cond(l.initialCondition)) },
+  { key: 'finalCond', label: 'Tình trạng sau khi dùng', value: (l) => (l.needsReentry ? 'Chờ nhập bổ sung' : isNoUse(l) ? 'Không sử dụng' : cond(l.finalCondition)) },
   { key: 'incident', label: 'Có sự cố không', value: (l) => (l.incidentReport?.hasIncident ? 'CÓ SỰ CỐ' : 'Bình thường') },
   { key: 'severity', label: 'Mức độ sự cố', value: (l) => l.incidentReport?.severity || 'Không' },
   { key: 'incidentDesc', label: 'Mô tả sự cố', value: (l) => l.incidentReport?.description || '' },
@@ -67,31 +71,43 @@ export function saveUsageFieldPrefs(keys: string[]): void {
   }
 }
 
-/** Ô CSV: bọc dấu nháy, nhân đôi dấu nháy bên trong. Ô số giữ nguyên. */
-const cell = (v: string | number) => (typeof v === 'number' ? String(v) : `"${String(v).replace(/"/g, '""')}"`);
-
 /**
- * Tạo file CSV mở được bằng Excel ở mọi máy: dòng đầu "sep=;" để Excel dùng dấu chấm phẩy
- * (máy kiểu Việt Nam dùng ";" làm dấu phân cách, nếu không mọi cột sẽ dồn vào một ô),
- * có BOM UTF-8 để giữ tiếng Việt.
+ * Dựng bảng báo cáo (tiêu đề, phần tóm tắt, bảng nhật ký) cho file .xlsx.
+ * Nhật ký được sắp xếp từ cũ đến mới (thời gian sử dụng xa nhất → gần nhất).
  */
-export function buildUsageCsv(params: {
+export function buildUsageSheet(params: {
   logs: UsageLog[];
   eqMap: Map<string, Equipment>;
   userMap: Map<string, User>;
   fields: string[];
   summary: string[][];
-}): string {
+}): XlsxSheet {
   const { logs, eqMap, userMap, summary } = params;
   const fields = USAGE_EXPORT_FIELDS.filter((f) => params.fields.includes(f.key));
-  const lines: string[] = ['sep=;'];
-  summary.forEach((row) => lines.push(row.map(cell).join(';')));
-  lines.push('');
-  lines.push(fields.map((f) => cell(f.label)).join(';'));
-  logs.forEach((log, idx) => {
+  const ordered = logs.slice().sort((a, b) => a.checkInTime.localeCompare(b.checkInTime));
+  const rows: XlsxValue[][] = [];
+  rows.push([{ v: 'BÁO CÁO VẬN HÀNH & SỬ DỤNG THIẾT BỊ PHÒNG THÍ NGHIỆM', s: 'title' }]);
+  summary.slice(1).forEach((row) => rows.push([{ v: row[0], s: 'bold' }, row[1] ?? '']));
+  rows.push([]);
+  const headerRow = rows.length + 1;
+  rows.push(fields.map((f) => ({ v: f.label, s: 'header' as XlsxStyle })));
+  ordered.forEach((log, idx) => {
     const eq = eqMap.get(log.equipmentId);
     const u = userMap.get(log.userId);
-    lines.push(fields.map((f) => (f.key === 'stt' ? cell(idx + 1) : cell(f.value(log, eq, u)))).join(';'));
+    const noUse = isNoUse(log);
+    const flagged = noUse || log.logType === 'auto' || !!log.needsReentry;
+    rows.push(fields.map((f) => {
+      const raw = f.key === 'stt' ? idx + 1 : f.value(log, eq, u);
+      // Ghi chú của ca tự động / không sử dụng được in đậm, màu đỏ để dễ nhận biết
+      const style: XlsxStyle = f.key === 'notes' && flagged ? 'redBold' : 'wrap';
+      return { v: raw, s: style };
+    }));
   });
-  return '﻿' + lines.join('\r\n');
+  return {
+    name: 'Nhật ký sử dụng',
+    rows,
+    freezeRows: headerRow,
+    maxColWidth: 48,
+  };
 }
+

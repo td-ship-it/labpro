@@ -37,9 +37,10 @@ var SCHEMA = {
     sheet: 'ThietBi',
     cols: ['id', 'code', 'name', 'category', 'room', 'building', 'status', 'manufacturer', 'model', 'specs', 'safetyGuidelines',
       'maxBookingHoursPerSession', 'maintenanceSchedule', 'responsibleStaff', 'sopTitle', 'sopDocCode', 'sopSteps', 'videoTutorial',
-      'manualDocName', 'quickChecklist', 'emergencyContact', 'maintenanceConfig', 'lastMaintenanceDate', 'trainedUserIds'],
+      'manualDocName', 'quickChecklist', 'emergencyContact', 'maintenanceConfig', 'lastMaintenanceDate', 'trainedUserIds',
+      'purposeOptions', 'checklistItems'],
     num: ['maxBookingHoursPerSession'],
-    json: ['sopSteps', 'videoTutorial', 'quickChecklist', 'maintenanceConfig', 'trainedUserIds'],
+    json: ['sopSteps', 'videoTutorial', 'quickChecklist', 'maintenanceConfig', 'trainedUserIds', 'purposeOptions', 'checklistItems'],
   },
   bookings: {
     sheet: 'LichDat',
@@ -51,9 +52,10 @@ var SCHEMA = {
     sheet: 'NhatKySuDung',
     cols: ['id', 'bookingId', 'equipmentId', 'userId', 'checkInTime', 'checkOutTime', 'durationMinutes', 'initialCondition',
       'finalCondition', 'sampleCount', 'incidentReport', 'projectId', 'projectCode', 'consumedSupplies', 'materialCostVND',
-      'operatorNotes', 'supervisorNotes'],
+      'operatorNotes', 'supervisorNotes', 'logType', 'needsReentry'],
     num: ['durationMinutes', 'sampleCount', 'materialCostVND'],
     json: ['incidentReport', 'consumedSupplies'],
+    bool: ['needsReentry'],
   },
   emails: {
     sheet: 'ThongBao',
@@ -714,7 +716,8 @@ var PUBLIC_ACTIONS = ['login', 'register', 'requestReset', 'resetPassword', 'pub
 var WRITE_ACTIONS = ['register', 'resetPassword','changePassword', 'createBooking', 'cancelBooking',
   'checkIn', 'checkOut', 'sendReminder', 'markEmailRead', 'markAllEmailsRead', 'addQuickNote', 'updateQuickNote',
   'deleteQuickNote', 'addMaintenanceRecord', 'deleteMaintenanceRecord', 'upsertEquipment', 'deleteEquipment', 'upsertUser',
-  'toggleUserStatus', 'upsertProject', 'deleteProject', 'upsertSupply', 'importSampleData', 'saveAiDoc', 'deleteAiDoc'];
+  'toggleUserStatus', 'upsertProject', 'deleteProject', 'upsertSupply', 'importSampleData', 'saveAiDoc', 'deleteAiDoc',
+  'dismissNoShow', 'completeLogDetails'];
 
 var ACTIONS = {
   publicConfig: function () { return publicConfig_(); },
@@ -731,8 +734,10 @@ var ACTIONS = {
   changePassword: changePassword_,
   createBooking: createBooking_,
   cancelBooking: cancelBooking_,
+  dismissNoShow: dismissNoShow_,
   checkIn: checkIn_,
   checkOut: checkOut_,
+  completeLogDetails: completeLogDetails_,
   sendReminder: sendReminder_,
   markEmailRead: markEmailRead_,
   markAllEmailsRead: markAllEmailsRead_,
@@ -1115,14 +1120,17 @@ function checkIn_(ctx) {
   }
 
   var project = p.projectId ? find_('projects', p.projectId) : null;
+  var initCond = oneOf_(p.initialCondition, CONDITIONS, 'Tình trạng máy');
+  var initNote = str_(p.operatorNotes, 2000);
+  if (needsNote_(initCond) && !initNote) throw fail_('Tình trạng máy "' + initCond + '" cần ghi chú chi tiết. Vui lòng nhập ghi chú bên dưới.');
   var log = {
     id: newId_('log'),
     bookingId: booking ? booking.id : undefined,
     equipmentId: eq.id,
     userId: booking && isAdmin_(u) ? booking.userId : u.id,
     checkInTime: now.iso,
-    initialCondition: oneOf_(p.initialCondition, CONDITIONS, 'Tình trạng máy'),
-    operatorNotes: str_(p.operatorNotes, 2000),
+    initialCondition: initCond,
+    operatorNotes: initNote,
     sampleCount: num_(p.sampleCount, 0, 1e6),
     projectId: project ? project.id : booking ? booking.projectId : undefined,
     projectCode: project ? project.code : (optStr_(p.projectCode, 60) || (booking ? booking.projectCode : undefined)),
@@ -1165,7 +1173,9 @@ function checkOut_(ctx) {
   }
   var supplies = cleanSupplies_(p.consumedSupplies) || log.consumedSupplies;
   var cost = (supplies || []).reduce(function (s, it) { return s + (it.totalCostVND || 0); }, 0);
-  var addendum = str_(p.operatorNotesAddendum, 2000);
+  var condNote = str_(p.conditionNote, 2000);
+  if (needsNote_(finalCondition) && !condNote) throw fail_('Tình trạng máy sau sử dụng cần ghi chú chi tiết. Vui lòng nhập ghi chú bên dưới.');
+  var addendum = [condNote ? 'Tình trạng máy: ' + condNote : '', str_(p.operatorNotesAddendum, 2000)].filter(function (x) { return x; }).join('\n');
 
   log.checkOutTime = now.iso;
   log.durationMinutes = Math.max(1, Math.round((now.ms - new Date(log.checkInTime).getTime()) / 60000));
@@ -1419,6 +1429,13 @@ function guiNhacLich() {
       eq = eq || find_('equipment', b.equipmentId); user = user || find_('users', b.userId);
       if (eq && user && user.status === 'active') mailReminder_(b, eq, user, diff);
     });
+    // Ca đã hết giờ mà không có check-in: ghi nhận "không check-in" vào nhật ký
+    all_('bookings').forEach(function (b) {
+      if (b.status !== 'confirmed') return;
+      var ended = b.date < now.date || (b.date === now.date && now.min >= toMin_(b.endTime));
+      if (ended) recordNoShow_(b, now, '[Không check-in] Đã hết khung giờ đăng ký ' + b.startTime + ' - ' + b.endTime +
+        ' nhưng không có ghi nhận nhận máy. Hệ thống tự ghi nhận không sử dụng.', 'no_checkin', null);
+    });
     autoCheckOut_(now);
   } finally {
     try {
@@ -1445,9 +1462,11 @@ function autoCheckOut_(now) {
       var endIso = new Date(endMs).toISOString();
       log.checkOutTime = endIso;
       log.durationMinutes = Math.max(1, Math.round((endMs - checkInMs) / 60000));
-      log.finalCondition = log.initialCondition || 'good';
+      // Không tự điền tình trạng và số lượng mẫu: người dùng phải nhập lại (needsReentry)
+      log.logType = 'auto';
+      log.needsReentry = true;
       var note = '[Tự động check-out] Người sử dụng không trả máy khi hết ca (' + b.endTime + '). Hệ thống tự ghi nhận check-out lúc ' +
-        b.endTime + ' ngày ' + b.date + '. Vui lòng kiểm tra tình trạng máy.';
+        b.endTime + ' ngày ' + b.date + '. Cần nhập lại số lượng mẫu và tình trạng máy.';
       log.operatorNotes = log.operatorNotes ? log.operatorNotes + '\n' + note : note;
       upsert_('logs', log);
       b.status = 'completed';
@@ -1469,6 +1488,72 @@ function autoCheckOut_(now) {
 /* ============================================================================
  * 11. GHI CHÚ NHANH
  * ========================================================================== */
+/** Ghi vào nhật ký một ca đã đăng ký nhưng không sử dụng máy (không check-in). */
+function recordNoShow_(b, now, reason, logType, actor) {
+  var eq = find_('equipment', b.equipmentId);
+  var log = {
+    id: newId_('log'),
+    bookingId: b.id,
+    equipmentId: b.equipmentId,
+    userId: b.userId,
+    checkInTime: now.iso,
+    checkOutTime: now.iso,
+    durationMinutes: 0,
+    logType: logType,
+    needsReentry: false,
+    operatorNotes: reason,
+    projectId: b.projectId || undefined,
+    projectCode: b.projectCode || undefined,
+    incidentReport: { hasIncident: false },
+  };
+  upsert_('logs', log);
+  b.status = 'completed';
+  upsert_('bookings', b);
+  audit_(actor, logType === 'not_used' ? 'Xác nhận không sử dụng' : 'Ghi nhận không check-in',
+    '[' + (eq ? eq.code : b.equipmentId) + '] ' + b.date + ' ' + b.startTime + '-' + b.endTime);
+  return log;
+}
+
+/** Người đăng ký xác nhận không dùng máy: tắt cảnh báo và ghi nhận vào nhật ký. */
+function dismissNoShow_(ctx) {
+  var u = ctx.user;
+  var b = find_('bookings', ctx.payload.bookingId);
+  if (!b) throw fail_('Lịch đặt không tồn tại.');
+  if (b.userId !== u.id && !isAdmin_(u)) throw fail_('Bạn chỉ có thể xử lý lịch của chính mình.', 'FORBIDDEN');
+  if (b.status !== 'confirmed') throw fail_('Lịch này đã được nhận máy, đã hoàn tất hoặc đã hủy.');
+  var now = now_();
+  if (b.date > now.date || (b.date === now.date && now.min < toMin_(b.startTime))) {
+    throw fail_('Chỉ xác nhận không sử dụng sau giờ bắt đầu của lịch.');
+  }
+  var log = recordNoShow_(b, now, '[Không sử dụng] Người đăng ký xác nhận không sử dụng máy trong khung giờ ' +
+    b.startTime + ' - ' + b.endTime + '.', 'not_used', u);
+  return { log: log, booking: b };
+}
+
+/** Bổ sung số lượng mẫu và tình trạng máy cho nhật ký do hệ thống tự check-out. */
+function completeLogDetails_(ctx) {
+  var u = ctx.user, p = ctx.payload || {};
+  var log = find_('logs', p.logId);
+  if (!log) throw fail_('Không tìm thấy nhật ký phiên này.');
+  if (log.userId !== u.id && !isAdmin_(u)) throw fail_('Chỉ người sử dụng hoặc Admin mới cập nhật được nhật ký này.', 'FORBIDDEN');
+  if (!log.needsReentry) throw fail_('Nhật ký này không cần bổ sung thông tin.');
+  if (p.sampleCount === undefined || p.sampleCount === null || p.sampleCount === '') throw fail_('Vui lòng nhập số lượng mẫu đã phân tích.');
+  var cond = oneOf_(p.finalCondition, CONDITIONS, 'Tình trạng máy sau sử dụng');
+  var condNote = str_(p.conditionNote, 2000);
+  if (needsNote_(cond) && !condNote) throw fail_('Tình trạng máy sau sử dụng cần ghi chú chi tiết.');
+  log.sampleCount = num_(p.sampleCount, 0, 1e6);
+  log.finalCondition = cond;
+  var extra = [condNote ? 'Tình trạng máy: ' + condNote : '', str_(p.operatorNotesAddendum, 2000)]
+    .filter(function (x) { return x; }).join('\n');
+  if (extra) log.operatorNotes = (log.operatorNotes ? log.operatorNotes + '\n' : '') + '[Bổ sung sau tự check-out]: ' + extra;
+  log.needsReentry = false;
+  upsert_('logs', log);
+  var eq = find_('equipment', log.equipmentId);
+  if (eq && cond === 'damaged') { eq.status = 'maintenance'; upsert_('equipment', eq); }
+  audit_(u, 'Bổ sung nhật ký', '[' + (eq ? eq.code : log.equipmentId) + '] mẫu: ' + log.sampleCount + ' · tình trạng: ' + cond);
+  return { log: log };
+}
+
 function cleanParams_(list) {
   if (!Array.isArray(list)) return undefined;
   var out = list.slice(0, 40).map(function (p) { return { key: str_(p && p.key, 100), value: str_(p && p.value, 300) }; })
@@ -1570,6 +1655,22 @@ function deleteMaintenanceRecord_(ctx) {
 /* ============================================================================
  * 13. QUẢN TRỊ: THIẾT BỊ, NGƯỜI DÙNG, ĐỀ TÀI, VẬT TƯ
  * ========================================================================== */
+/** Danh sách chuỗi: bỏ trống, bỏ trùng, giới hạn số mục và độ dài. */
+function cleanList_(list, maxItems, maxLen) {
+  if (!Array.isArray(list)) return [];
+  var out = [];
+  list.forEach(function (x) {
+    var s = str_(x, maxLen);
+    if (s && out.indexOf(s) < 0 && out.length < maxItems) out.push(s);
+  });
+  return out;
+}
+
+/** Tình trạng 2 hoặc 3 bắt buộc phải có ghi chú kèm theo. */
+function needsNote_(cond) {
+  return cond === 'minor_wear' || cond === 'needs_calibration';
+}
+
 function pick_(src, cols) {
   var o = {};
   cols.forEach(function (c) { if (src[c] !== undefined && src[c] !== null && src[c] !== '') o[c] = src[c]; });
@@ -1595,6 +1696,8 @@ function upsertEquipment_(ctx) {
   eq.trainedUserIds = Array.isArray(p.trainedUserIds)
     ? p.trainedUserIds.map(function (x) { return str_(x, 80); }).filter(function (x, i, a) { return x && a.indexOf(x) === i; }).slice(0, 500)
     : [];
+  eq.purposeOptions = cleanList_(p.purposeOptions, 30, 200);
+  eq.checklistItems = cleanList_(p.checklistItems, 20, 200);
   ['room', 'building', 'manufacturer', 'model', 'responsibleStaff', 'maintenanceSchedule', 'sopTitle', 'sopDocCode', 'manualDocName', 'emergencyContact']
     .forEach(function (k) { if (eq[k] !== undefined) eq[k] = str_(eq[k], 300); });
   ['specs', 'safetyGuidelines'].forEach(function (k) { if (eq[k] !== undefined) eq[k] = str_(eq[k], 5000); });
@@ -1709,9 +1812,18 @@ function upsertProject_(ctx) {
   return { project: proj };
 }
 
+/** Cụm từ chung không phân biệt đề tài (bỏ trước khi tạo mã). */
+var PROJ_PHRASES = ['xay dung', 'nghien cuu', 'danh gia', 'khao sat', 'phat trien', 'ung dung', 'de tai', 'du an',
+  'thuc nghiem', 'phan tich', 'tien hanh', 'thiet ke'];
+/** Từ nối không mang nghĩa khi tạo mã. */
+var PROJ_STOP = ['va', 'cua', 'cho', 'cac', 'mot', 'nhung', 'trong', 'tren', 'voi', 'theo', 've', 'tu', 'tai', 'den', 'nam', 'giai', 'doan'];
+
+/** Mã đề tài 3–4 ký tự: chữ cái đầu của các từ khóa quan trọng trong tên đề tài, kèm năm (vd. CTVN-2026). */
 function genProjectCode_(name, year, exceptId) {
-  var words = normVi_(name).split(' ').filter(function (w) { return w; });
-  var abbr = words.map(function (w) { return w.charAt(0); }).join('').toUpperCase().slice(0, 8) || 'DT';
+  var s = normVi_(name);
+  PROJ_PHRASES.forEach(function (ph) { s = s.split(ph).join(' '); });
+  var words = s.split(/[^a-z0-9]+/).filter(function (w) { return w && !/^\d+$/.test(w) && PROJ_STOP.indexOf(w) < 0; });
+  var abbr = words.map(function (w) { return w.charAt(0); }).join('').toUpperCase().slice(0, 4) || 'DT';
   var taken = {};
   all_('projects').forEach(function (x) { if (x.id !== exceptId) taken[String(x.code).toUpperCase()] = true; });
   var base = abbr + '-' + year, code = base, k = 2;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Equipment, User, UsageLog, Booking, MachineCondition, ConsumedSupplyItem, ConsumableSupply } from '../types';
+import { Equipment, User, UsageLog, Booking, MachineCondition } from '../types';
 import { LabStorage } from '../services/storage';
-import { X, CheckCircle, AlertTriangle, AlertOctagon, HelpCircle, StickyNote, ExternalLink, Package, Plus, Minus, FolderGit2 } from 'lucide-react';
+import { checklistOf } from '../data/equipmentDefaults';
+import { X, CheckCircle, AlertTriangle, HelpCircle, StickyNote, ExternalLink, CheckSquare, Square } from 'lucide-react';
 
 interface CheckInOutModalProps {
   isOpen: boolean;
@@ -14,6 +15,31 @@ interface CheckInOutModalProps {
   onSuccess: () => void;
   onOpenQuickNotes?: (eqId: string) => void;
 }
+
+/** Tình trạng 2 và 3 bắt buộc có ghi chú chi tiết. */
+export const conditionNeedsNote = (c: MachineCondition) => c === 'minor_wear' || c === 'needs_calibration';
+
+/** Ba mức tình trạng thả chọn (thay cho danh sách cũ có thêm mục "Hỏng hóc"). */
+export const CONDITION_OPTIONS: { value: MachineCondition; label: string; desc: string; icon: React.ReactNode }[] = [
+  {
+    value: 'good',
+    label: 'Tốt / Bình thường',
+    desc: 'Thiết bị hoạt động chuẩn xác, không có dấu hiệu bất thường',
+    icon: <CheckCircle className="w-4 h-4 text-emerald-600" />,
+  },
+  {
+    value: 'minor_wear',
+    label: 'Hao mòn nhẹ / Chấp nhận được',
+    desc: 'Có vết xước ngoài vỏ hoặc phụ kiện mòn nhẹ nhưng không ảnh hưởng kết quả',
+    icon: <HelpCircle className="w-4 h-4 text-amber-600" />,
+  },
+  {
+    value: 'needs_calibration',
+    label: 'Cần hiệu chuẩn lại',
+    desc: 'Baseline bị trôi hoặc quang phổ cần chỉnh bước sóng chuẩn',
+    icon: <AlertTriangle className="w-4 h-4 text-orange-600" />,
+  },
+];
 
 export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
   isOpen,
@@ -28,73 +54,40 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
 }) => {
   // Check-in state
   const [initialCondition, setInitialCondition] = useState<MachineCondition>('good');
-  const [operatorNotes, setOperatorNotes] = useState<string>('Thiết bị khởi động bình thường, buồng đo sạch sẽ.');
+  const [operatorNotes, setOperatorNotes] = useState<string>('');
 
   // Check-out state
   const [finalCondition, setFinalCondition] = useState<MachineCondition>('good');
-  const [sampleCount, setSampleCount] = useState<number>(activeLog?.sampleCount || 5);
-  const [checkoutNotes, setCheckoutNotes] = useState<string>('Đã tắt đèn quang phổ / khóa van khí an toàn và vệ sinh khu vực đo.');
+  const [conditionNote, setConditionNote] = useState<string>('');
+  const [sampleCount, setSampleCount] = useState<string>(activeLog?.sampleCount !== undefined ? String(activeLog.sampleCount) : '');
+  const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [hasIncident, setHasIncident] = useState<boolean>(false);
   const [incidentSeverity, setIncidentSeverity] = useState<'low' | 'medium' | 'high' | 'critical'>('low');
   const [incidentDesc, setIncidentDesc] = useState<string>('');
 
-  // Project Tracking & Supplies Consumed state
-  const [catalogSupplies, setCatalogSupplies] = useState<ConsumableSupply[]>([]);
-  const [consumedSupplies, setConsumedSupplies] = useState<ConsumedSupplyItem[]>([]);
-
-  useEffect(() => {
-    if (isOpen) {
-      setCatalogSupplies(LabStorage.getConsumableSupplies());
-      if (activeLog?.consumedSupplies && activeLog.consumedSupplies.length > 0) {
-        setConsumedSupplies(activeLog.consumedSupplies);
-      } else if (activeBooking?.plannedSupplies && activeBooking.plannedSupplies.length > 0) {
-        setConsumedSupplies(activeBooking.plannedSupplies);
-      } else {
-        setConsumedSupplies([]);
-      }
-    }
-  }, [isOpen, activeBooking, activeLog]);
-
-  const handleAddSupply = (supply: ConsumableSupply, delta = 1) => {
-    setConsumedSupplies((prev) => {
-      const existing = prev.find((item) => item.supplyId === supply.id);
-      if (existing) {
-        const newQty = Math.max(0, existing.quantity + delta);
-        if (newQty === 0) {
-          return prev.filter((item) => item.supplyId !== supply.id);
-        }
-        return prev.map((item) =>
-          item.supplyId === supply.id
-            ? { ...item, quantity: newQty, totalCostVND: newQty * item.unitCostVND }
-            : item
-        );
-      } else if (delta > 0) {
-        return [
-          ...prev,
-          {
-            supplyId: supply.id,
-            supplyCode: supply.code,
-            supplyName: supply.name,
-            quantity: delta,
-            unit: supply.unit,
-            unitCostVND: supply.unitCostVND,
-            totalCostVND: delta * supply.unitCostVND,
-          },
-        ];
-      }
-      return prev;
-    });
-  };
-
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      setErrorMsg(null);
+      setCheckedItems([]);
+      setSampleCount(activeLog?.sampleCount !== undefined ? String(activeLog.sampleCount) : '');
+    }
+  }, [isOpen, activeLog]);
+
   if (!isOpen) return null;
+
+  const checklist = checklistOf(equipment);
 
   const handleCheckInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
     setErrorMsg(null);
+    if (conditionNeedsNote(initialCondition) && !operatorNotes.trim()) {
+      setErrorMsg('Tình trạng máy đã chọn cần ghi chú chi tiết. Vui lòng nhập ghi chú bên dưới.');
+      return;
+    }
 
     setSubmitting(true);
     const res = await LabStorage.checkInEquipment({
@@ -123,17 +116,27 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
       setErrorMsg('Không tìm thấy nhật ký phiên hiện tại.');
       return;
     }
-
+    if (sampleCount.trim() === '' || Number(sampleCount) < 0) {
+      setErrorMsg('Vui lòng nhập số lượng mẫu đã phân tích.');
+      return;
+    }
+    if (conditionNeedsNote(finalCondition) && !conditionNote.trim()) {
+      setErrorMsg('Tình trạng máy đã chọn cần ghi chú chi tiết. Vui lòng nhập ghi chú bên dưới.');
+      return;
+    }
     if (hasIncident && !incidentDesc.trim()) {
       setErrorMsg('Vui lòng nhập chi tiết mô tả sự cố để kỹ thuật viên nắm bắt.');
       return;
     }
 
+    const completed = checklist.filter((item) => checkedItems.includes(item));
+
     setSubmitting(true);
     const res = await LabStorage.checkOutEquipment({
       logId: activeLog.id,
       finalCondition,
-      operatorNotesAddendum: checkoutNotes.trim(),
+      conditionNote: conditionNeedsNote(finalCondition) ? conditionNote.trim() : undefined,
+      operatorNotesAddendum: completed.length > 0 ? 'Đã hoàn tất: ' + completed.join('; ') : undefined,
       sampleCount: Number(sampleCount) || 0,
       incidentReport: {
         hasIncident,
@@ -141,7 +144,6 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
         description: hasIncident ? incidentDesc.trim() : undefined,
         resolved: false,
       },
-      consumedSupplies: consumedSupplies.length > 0 ? consumedSupplies : undefined,
     });
     setSubmitting(false);
 
@@ -153,32 +155,26 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
     }
   };
 
-  const conditionOptions: { value: MachineCondition; label: string; desc: string; icon: React.ReactNode }[] = [
-    {
-      value: 'good',
-      label: 'Tốt / Bình thường',
-      desc: 'Thiết bị hoạt động chuẩn xác, không có dấu hiệu bất thường',
-      icon: <CheckCircle className="w-4 h-4 text-emerald-600" />,
-    },
-    {
-      value: 'minor_wear',
-      label: 'Hao mòn nhẹ / Chấp nhận được',
-      desc: 'Có vết xước ngoài vỏ hoặc phụ kiện mòn nhẹ nhưng không ảnh hưởng kết quả',
-      icon: <HelpCircle className="w-4 h-4 text-amber-600" />,
-    },
-    {
-      value: 'needs_calibration',
-      label: 'Cần hiệu chuẩn lại',
-      desc: 'Baseline bị trôi hoặc quang phổ cần chỉnh bước sóng chuẩn',
-      icon: <AlertTriangle className="w-4 h-4 text-orange-600" />,
-    },
-    {
-      value: 'damaged',
-      label: 'Hỏng hóc / Báo lỗi hệ thống',
-      desc: 'Không thể tiếp tục đo, phát sinh mã lỗi phần cứng hoặc gãy phụ kiện',
-      icon: <AlertOctagon className="w-4 h-4 text-rose-600" />,
-    },
-  ];
+  const toggleItem = (item: string) => {
+    setCheckedItems((prev) => (prev.includes(item) ? prev.filter((x) => x !== item) : [...prev, item]));
+  };
+
+  /** Ô ghi chú bắt buộc: chỉ hiện khi chọn tình trạng 2 hoặc 3, ngay bên dưới danh sách. */
+  const noteBox = (value: string, setValue: (v: string) => void, placeholder: string) => (
+    <div className="p-2.5 rounded-lg bg-amber-50/70 border border-amber-200 space-y-1 animate-in fade-in duration-100">
+      <label className="block text-xs font-semibold text-amber-900">
+        Mô tả chi tiết tình trạng: <span className="text-rose-600">*</span>
+      </label>
+      <textarea
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        rows={2}
+        required
+        placeholder={placeholder}
+        className="w-full text-xs sm:text-sm p-2.5 rounded-lg border border-amber-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+      />
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
@@ -277,7 +273,7 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                 Đánh giá tình trạng thiết bị trước khi vận hành:
               </label>
               <div className="space-y-2">
-                {conditionOptions.filter((o) => o.value !== 'damaged').map((opt) => (
+                {CONDITION_OPTIONS.map((opt) => (
                   <label
                     key={opt.value}
                     className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
@@ -306,20 +302,11 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                   </label>
                 ))}
               </div>
-            </div>
-
-            {/* Operator Notes */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Ghi chú tình trạng ban đầu & Kiểm tra an toàn:
-              </label>
-              <textarea
-                value={operatorNotes}
-                onChange={(e) => setOperatorNotes(e.target.value)}
-                rows={2}
-                placeholder="Ghi nhận tình trạng buồng mẫu, áp suất khí, hóa chất tồn đọng..."
-                className="w-full text-xs sm:text-sm p-2.5 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-              />
+              {conditionNeedsNote(initialCondition) && (
+                <div className="mt-2">
+                  {noteBox(operatorNotes, setOperatorNotes, 'Mô tả vết xước, phụ kiện mòn, baseline trôi hoặc bước sóng cần hiệu chuẩn...')}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
@@ -367,7 +354,7 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                 Tình trạng thiết bị sau khi kết thúc thí nghiệm:
               </label>
               <div className="space-y-1.5">
-                {conditionOptions.map((opt) => (
+                {CONDITION_OPTIONS.map((opt) => (
                   <label
                     key={opt.value}
                     className={`flex items-start gap-2.5 p-2 rounded-lg border text-xs cursor-pointer transition-colors ${
@@ -393,100 +380,51 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                   </label>
                 ))}
               </div>
-            </div>
-
-            {/* Sample Count & Work Performed */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Số lượng mẫu đã phân tích:
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={sampleCount}
-                  onChange={(e) => setSampleCount(Number(e.target.value))}
-                  className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Bàn giao / Vệ sinh thiết bị:
-                </label>
-                <div className="text-xs text-slate-500 p-2 bg-slate-50 border border-slate-200 rounded-lg">
-                  Lau khô buồng mẫu, tắt thiết bị phụ trợ & khóa van an toàn.
-                </div>
-              </div>
-            </div>
-
-            {/* Project Consumables Logging */}
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Package className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Vật Tư Tiêu Hao Thực Tế (Ghi Nhận Cho Đề Tài)</span>
-                  {(activeBooking?.projectCode || activeLog?.projectCode) && (
-                    <span className="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono text-xs font-bold">
-                      [{activeBooking?.projectCode || activeLog?.projectCode}]
-                    </span>
-                  )}
-                </label>
-                <span className="text-xs font-mono text-slate-700">
-                  Tổng: <strong className="text-emerald-700">{consumedSupplies.reduce((acc, s) => acc + s.totalCostVND, 0).toLocaleString('vi-VN')} ₫</strong>
-                </span>
-              </div>
-
-              {/* Quick Add Supply buttons */}
-              <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1 bg-white rounded-lg border border-slate-200">
-                {catalogSupplies.map((sup) => (
-                  <button
-                    key={sup.id}
-                    type="button"
-                    onClick={() => handleAddSupply(sup, 1)}
-                    className="px-2 py-0.5 text-xs rounded border border-slate-200 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-700 flex items-center gap-1"
-                  >
-                    <Plus className="w-2.5 h-2.5" />
-                    <span>{sup.name}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Consumed list with counter */}
-              {consumedSupplies.length > 0 && (
-                <div className="space-y-1 pt-1">
-                  {consumedSupplies.map((item) => {
-                    const supMatch = catalogSupplies.find((c) => c.id === item.supplyId);
-                    return (
-                      <div key={item.supplyId} className="p-1.5 rounded-lg bg-white border border-slate-200 flex items-center justify-between text-xs">
-                        <span className="font-medium text-slate-800 truncate max-w-[200px]">{item.supplyName}</span>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1 border border-slate-200 rounded p-0.5">
-                            <button
-                              type="button"
-                              onClick={() => supMatch && handleAddSupply(supMatch, -1)}
-                              className="p-0.5 hover:bg-slate-100 rounded text-slate-600"
-                            >
-                              <Minus className="w-2.5 h-2.5" />
-                            </button>
-                            <span className="font-mono font-bold text-indigo-700 px-1 text-xs">{item.quantity} {item.unit}</span>
-                            <button
-                              type="button"
-                              onClick={() => supMatch && handleAddSupply(supMatch, 1)}
-                              className="p-0.5 hover:bg-slate-100 rounded text-slate-600"
-                            >
-                              <Plus className="w-2.5 h-2.5" />
-                            </button>
-                          </div>
-                          <span className="font-mono font-bold text-slate-900 min-w-[60px] text-right">
-                            {item.totalCostVND.toLocaleString('vi-VN')} ₫
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
+              {conditionNeedsNote(finalCondition) && (
+                <div className="mt-2">
+                  {noteBox(conditionNote, setConditionNote, 'Mô tả chi tiết tình trạng máy sau khi sử dụng...')}
                 </div>
               )}
+            </div>
+
+            {/* Sample Count */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Số lượng mẫu đã phân tích: <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={sampleCount}
+                onChange={(e) => setSampleCount(e.target.value)}
+                placeholder="Nhập số mẫu"
+                className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 font-mono"
+              />
+            </div>
+
+            {/* Completion checklist: người dùng tự tick chọn theo từng thiết bị */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Hoàn tất trước khi trả máy (tick chọn):
+              </label>
+              <div className="space-y-1.5">
+                {checklist.map((item) => {
+                  const on = checkedItems.includes(item);
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => toggleItem(item)}
+                      className={`w-full flex items-center gap-2 p-2 rounded-lg border text-xs text-left transition-colors ${
+                        on ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900' : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {on ? <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" /> : <Square className="w-4 h-4 text-slate-400 shrink-0" />}
+                      <span>{item}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Incident Report Section */}
@@ -536,19 +474,6 @@ export const CheckInOutModal: React.FC<CheckInOutModalProps> = ({
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Final Operator Notes */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Ghi chú hoàn tất của người vận hành:
-              </label>
-              <textarea
-                value={checkoutNotes}
-                onChange={(e) => setCheckoutNotes(e.target.value)}
-                rows={2}
-                className="w-full text-xs sm:text-sm p-2.5 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-              />
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">

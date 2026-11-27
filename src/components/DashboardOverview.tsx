@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   Equipment, 
   User, 
@@ -7,6 +7,7 @@ import {
   EmailNotification 
 } from '../types';
 import { LabStorage, localDateStr } from '../services/storage';
+import { CompleteLogModal } from './CompleteLogModal';
 import { calculateEquipmentMaintenanceForecast } from '../services/maintenanceForecaster';
 import { ActiveTab } from './Navbar';
 import { 
@@ -44,7 +45,8 @@ import {
   FileText,
   Building2,
   TrendingUp,
-  ShieldCheck
+  ShieldCheck,
+  XCircle
 } from 'lucide-react';
 
 interface DashboardOverviewProps {
@@ -80,6 +82,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onOpenQRScanner,
   onOpenGeminiChat,
   onOpenQRModal,
+  onRefresh,
 }) => {
   const todayStr = useMemo(() => localDateStr(), []);
   const eqMap = useMemo(() => new Map(equipmentList.map((e) => [e.id, e])), [equipmentList]);
@@ -242,6 +245,46 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     });
   }, [logs, currentUser.id, eqMap, bookings]);
 
+  // Đăng ký đã tới giờ (+15 phút) mà chưa check-in: người đăng ký hoặc Admin cần xử lý
+  const isAdminUser = currentUser.role === 'admin';
+  const noCheckinAlerts = useMemo(() => {
+    const nowD = new Date();
+    const nowMin = nowD.getHours() * 60 + nowD.getMinutes();
+    const toMinOf = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+    return bookings
+      .filter((b) => {
+        if (b.status !== 'confirmed') return false;
+        if (!isAdminUser && b.userId !== currentUser.id) return false;
+        if (b.date < todayStr) return true;
+        return b.date === todayStr && nowMin >= toMinOf(b.startTime) + 15;
+      })
+      .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
+  }, [bookings, currentUser.id, isAdminUser, todayStr]);
+
+  // Ca do hệ thống tự check-out khi hết giờ: cần người sử dụng nhập lại số mẫu và tình trạng máy
+  const reentryLogs = useMemo(
+    () => logs.filter((l) => l.needsReentry).sort((a, b) => b.checkInTime.localeCompare(a.checkInTime)),
+    [logs]
+  );
+
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [completeLog, setCompleteLog] = useState<UsageLog | null>(null);
+
+  const runAction = async (key: string, fn: () => Promise<{ success: boolean; error?: string }>) => {
+    setBusyKey(key);
+    setActionError(null);
+    const res = await fn();
+    setBusyKey(null);
+    if (res.success) onRefresh?.();
+    else setActionError(res.error || 'Thao tác không thành công.');
+  };
+
+  const cancelMyBooking = (bookingId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy lịch đăng ký này?')) return;
+    runAction('cancel-' + bookingId, () => LabStorage.cancelBooking(bookingId));
+  };
+
   // Format relative time helper
   const getRelativeTime = (isoString: string) => {
     const diffMs = Date.now() - new Date(isoString).getTime();
@@ -257,7 +300,15 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      
+      {completeLog && (
+        <CompleteLogModal
+          log={completeLog}
+          equipment={eqMap.get(completeLog.equipmentId)}
+          onClose={() => setCompleteLog(null)}
+          onSuccess={() => onRefresh?.()}
+        />
+      )}
+
       {/* 1. Top Welcome Banner with Academic & Accreditation Logos */}
       <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 rounded-2xl p-6 sm:p-7 text-white shadow-lg relative overflow-hidden">
         {/* Subtle background glow */}
@@ -521,6 +572,111 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* 3. CRITICAL ALERTS CENTER (CẢNH BÁO QUAN TRỌNG) */}
       <div className="space-y-6">
         
+        {/* SECTION 0: Quá giờ sử dụng máy (chưa check-in / ca tự check-out cần bổ sung) */}
+        {(actionError || noCheckinAlerts.length > 0 || reentryLogs.length > 0) && (
+          <div className="bg-white rounded-xl border border-rose-200 shadow-2xs overflow-hidden">
+            <div className="px-5 py-4 border-b border-rose-100 bg-rose-50/70">
+              <h3 className="text-sm font-bold text-rose-900 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600" />
+                <span>Cảnh Báo Quá Giờ Sử Dụng Máy</span>
+              </h3>
+            </div>
+
+            <div className="p-4 sm:p-5 space-y-4">
+              {actionError && (
+                <div className="p-2.5 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg">{actionError}</div>
+              )}
+
+              {noCheckinAlerts.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-xs font-bold text-rose-800">
+                    Đăng ký nhưng chưa check-in ({noCheckinAlerts.length})
+                  </div>
+                  {noCheckinAlerts.map((b) => {
+                    const eq = eqMap.get(b.equipmentId);
+                    const owner = userMap.get(b.userId);
+                    const key = 'ns-' + b.id;
+                    const isOwn = b.userId === currentUser.id;
+                    return (
+                      <div key={b.id} className="p-3 rounded-lg border border-rose-200 bg-rose-50/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="font-bold text-rose-900">
+                            [{eq?.code || b.equipmentId}] {eq?.name || ''} · {b.date} {b.startTime} - {b.endTime}
+                          </div>
+                          <div className="text-rose-800">
+                            Người đăng ký: <strong>{owner?.name || '—'}</strong>. Hệ thống chưa ghi nhận thông tin này trong nhật ký sử dụng thiết bị.
+                          </div>
+                          <div className="text-slate-600">
+                            Cần check-in, hoặc xác nhận không sử dụng để ghi nhận vào nhật ký.
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isOwn && eq && b.date === todayStr && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenCheckIn(eq, b)}
+                              className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer"
+                            >
+                              Check-in
+                            </button>
+                          )}
+                          {(isOwn || isAdminUser) && (
+                            <button
+                              type="button"
+                              disabled={busyKey === key}
+                              onClick={() => runAction(key, () => LabStorage.dismissNoShow(b.id))}
+                              className="px-3 py-1.5 text-xs font-semibold text-rose-700 bg-white hover:bg-rose-100 border border-rose-300 rounded-lg transition-colors cursor-pointer disabled:opacity-60"
+                            >
+                              {busyKey === key ? 'Đang ghi nhận...' : 'Không sử dụng máy'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {reentryLogs.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-xs font-bold text-rose-800">
+                    Quá giờ sử dụng máy, cần bổ sung thông tin ({reentryLogs.length})
+                  </div>
+                  {reentryLogs.map((log) => {
+                    const eq = eqMap.get(log.equipmentId);
+                    const operator = userMap.get(log.userId);
+                    const canEdit = log.userId === currentUser.id || isAdminUser;
+                    return (
+                      <div key={log.id} className="p-3 rounded-lg border border-rose-200 bg-rose-50/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="font-bold text-rose-900">
+                            [{eq?.code || log.equipmentId}] {eq?.name || ''}
+                          </div>
+                          <div className="text-rose-800">
+                            Người sử dụng: <strong>{operator?.name || '—'}</strong> · Hệ thống đã tự check-out khi hết ca.
+                          </div>
+                          <div className="text-slate-600">
+                            Chưa có số lượng mẫu và tình trạng máy. Người sử dụng cần nhập lại để hoàn tất nhật ký.
+                          </div>
+                        </div>
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => setCompleteLog(log)}
+                            className="px-3 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors cursor-pointer shrink-0"
+                          >
+                            Bổ sung thông tin
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* SECTION A: Overdue Active Sessions (Các ca quá hạn chưa check-out) */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
@@ -915,7 +1071,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         </div>
                       </div>
 
-                      <div className="shrink-0">
+                      <div className="shrink-0 flex items-center gap-2 flex-wrap justify-end">
+                        {isConfirmed && (
+                          <button
+                            type="button"
+                            disabled={busyKey === 'cancel-' + b.id}
+                            onClick={() => cancelMyBooking(b.id)}
+                            className="px-3 py-1.5 text-xs font-semibold text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-60"
+                          >
+                            <XCircle className="w-3 h-3" />
+                            <span>Huỷ lịch</span>
+                          </button>
+                        )}
                         {isConfirmed && eq && (
                           <button
                             type="button"
@@ -1050,7 +1217,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </div>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Trường đại học trọng điểm quốc gia hàng đầu trong đào tạo nguồn nhân lực y tế, nghiên cứu khoa học và chuyển giao công nghệ y dược tại Việt Nam.
+              Cung cấp nguồn nhân lực y tế chất lượng cao và chuyên gia hàng đầu dẫn dắt, lãnh đạo trong lĩnh vực khoa học sức khỏe; tiếp cận, phát triển và đóng góp vào thành tựu khoa học, tri thức nhân loại; phát triển tinh thần phụng sự cộng đồng.
             </p>
             <div className="pt-1 flex items-center gap-2 text-xs text-teal-800 font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-600" />
@@ -1064,7 +1231,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               <img src="/logos/truong-duoc.png" alt="" width={40} height={40} className="rounded-full object-contain" />
               <div>
                 <h4 className="text-xs font-black uppercase tracking-tight text-emerald-950">
-                  Trường Dược (Khoa Dược)
+                  Trường Dược
                 </h4>
                 <p className="text-xs font-semibold text-emerald-700">
                   UMPSP · Faculty / School of Pharmacy
@@ -1072,7 +1239,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </div>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Đơn vị đào tạo Dược sĩ đại học và sau đại học chuẩn mực quốc tế, sở hữu hệ thống các phòng thí nghiệm nghiên cứu chuyên sâu về thuốc và dược liệu.
+              Đào tạo dược sĩ có đạo đức tốt, có kiến thức y dược học vững chắc để cộng tác với bác sĩ hướng dẫn người bệnh sử dụng thuốc hợp lý, an toàn, hiệu quả; sản xuất, quản lý và cung ứng thuốc tốt; góp phần chăm sóc và bảo vệ sức khỏe nhân dân.
             </p>
             <div className="pt-1 flex items-center gap-2 text-xs text-emerald-800 font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
@@ -1094,7 +1261,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </div>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Bộ môn trực tiếp quản lý và vận hành danh mục thiết bị thực tập, nghiên cứu hệ phân tán nano, viên nén, viên nang, thuốc tiêm và thử nghiệm độ hòa tan.
+              Bộ môn Bào chế cung cấp cho sinh viên đại học và học viên sau đại học các kiến thức cơ bản và nghiệp vụ về phát triển và sản xuất thuốc (gồm các lĩnh vực thiết kế dạng bào chế, hệ phân phối thuốc kết hợp với sinh dược học) thuộc chuyên ngành khoa học dược; về pha chế tại bệnh viện và nhà thuốc thuộc chuyên ngành chăm sóc dược.
             </p>
             <div className="pt-1 flex items-center gap-2 text-xs text-amber-800 font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />

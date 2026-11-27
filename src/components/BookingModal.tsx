@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Equipment, User, Booking, ResearchProject, ConsumableSupply, ConsumedSupplyItem } from '../types';
+import { Equipment, User, Booking, ResearchProject } from '../types';
 import { LabStorage, checkBookingConflict, localDateStr } from '../services/storage';
-import { X, Calendar, Clock, AlertCircle, CheckCircle2, ShieldAlert, StickyNote, FolderGit2, Package, Plus, Minus, Tag, Coins } from 'lucide-react';
+import { purposeOptionsOf } from '../data/equipmentDefaults';
+import { X, Calendar, Clock, AlertCircle, CheckCircle2, ShieldAlert, StickyNote, FolderGit2 } from 'lucide-react';
+
+/** Lựa chọn "nhập chi tiết" trong danh sách mục đích thí nghiệm. */
+const PURPOSE_OTHER = '__other__';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -36,7 +40,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [date, setDate] = useState<string>(localDateStr());
   const [startTime, setStartTime] = useState<string>('09:00');
   const [endTime, setEndTime] = useState<string>('11:00');
-  const [purpose, setPurpose] = useState<string>('');
+  const [purposeChoice, setPurposeChoice] = useState<string>('');
+  const [purposeDetail, setPurposeDetail] = useState<string>('');
   const [projectCode, setProjectCode] = useState<string>('');
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
@@ -45,16 +50,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   // Project Tracking & Supplies State
   const [projects, setProjects] = useState<ResearchProject[]>([]);
-  const [catalogSupplies, setCatalogSupplies] = useState<ConsumableSupply[]>([]);
-  const [plannedSupplies, setPlannedSupplies] = useState<ConsumedSupplyItem[]>([]);
-  const [isSuppliesAccordionOpen, setIsSuppliesAccordionOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
       const projList = LabStorage.getProjects();
-      const supList = LabStorage.getConsumableSupplies();
       setProjects(projList);
-      setCatalogSupplies(supList);
 
       if (preselectedProjectId) {
         setSelectedProjectId(preselectedProjectId);
@@ -69,47 +69,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     setSelectedProjectId(projId);
     if (projId) {
       const proj = projects.find((p) => p.id === projId);
-      if (proj) {
-        setProjectCode(proj.code);
-        if (!purpose) {
-          setPurpose(`Thực nghiệm đo mẫu cho đề tài [${proj.code}] ${proj.name}`);
-        }
-      }
+      if (proj) setProjectCode(proj.code);
     } else {
       setProjectCode('');
     }
-  };
-
-  // Add / Increment supply item
-  const handleAddSupply = (supply: ConsumableSupply, delta = 1) => {
-    setPlannedSupplies((prev) => {
-      const existing = prev.find((item) => item.supplyId === supply.id);
-      if (existing) {
-        const newQty = Math.max(0, existing.quantity + delta);
-        if (newQty === 0) {
-          return prev.filter((item) => item.supplyId !== supply.id);
-        }
-        return prev.map((item) =>
-          item.supplyId === supply.id
-            ? { ...item, quantity: newQty, totalCostVND: newQty * item.unitCostVND }
-            : item
-        );
-      } else if (delta > 0) {
-        return [
-          ...prev,
-          {
-            supplyId: supply.id,
-            supplyCode: supply.code,
-            supplyName: supply.name,
-            quantity: delta,
-            unit: supply.unit,
-            unitCostVND: supply.unitCostVND,
-            totalCostVND: delta * supply.unitCostVND,
-          },
-        ];
-      }
-      return prev;
-    });
   };
 
   // Initialize selected equipment and time presets
@@ -153,6 +116,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   const durationHours = parseFloat(getDurationHours());
+  const purposeOptions = purposeOptionsOf(selectedEquipment);
+  const purposeText = purposeChoice === PURPOSE_OTHER ? purposeDetail.trim() : purposeChoice;
   const exceedsMaxHours = selectedEquipment && durationHours > selectedEquipment.maxBookingHoursPerSession;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -169,8 +134,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       return;
     }
 
-    if (!purpose.trim()) {
-      setErrorMsg('Vui lòng nhập mục đích nghiên cứu / sử dụng thiết bị.');
+    if (!purposeText) {
+      setErrorMsg(purposeChoice === PURPOSE_OTHER
+        ? 'Vui lòng nhập chi tiết mục đích thí nghiệm.'
+        : 'Vui lòng chọn mục đích thí nghiệm.');
       return;
     }
 
@@ -196,10 +163,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       date,
       startTime,
       endTime,
-      purpose: purpose.trim(),
+      purpose: purposeText,
       projectId: selectedProjectId || undefined,
       projectCode: projectCode.trim() || undefined,
-      plannedSupplies: plannedSupplies.length > 0 ? plannedSupplies : undefined,
       notes: notes.trim() || undefined,
     });
 
@@ -257,7 +223,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             </label>
             <select
               value={selectedEqId}
-              onChange={(e) => setSelectedEqId(e.target.value)}
+              onChange={(e) => { setSelectedEqId(e.target.value); setPurposeChoice(''); setPurposeDetail(''); }}
               className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-colors bg-white font-medium"
               required
             >
@@ -387,19 +353,34 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             </div>
           )}
 
-          {/* Purpose & Project Code */}
+          {/* Purpose: thả chọn theo loại thiết bị, hoặc nhập chi tiết */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               Mục đích thí nghiệm / Nội dung đo mẫu <span className="text-rose-500">*</span>
             </label>
-            <input
-              type="text"
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              placeholder="Ví dụ: Đo huỳnh quang phân tích hợp chất trong dịch chiết cây dược liệu"
-              className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+            <select
+              value={purposeChoice}
+              onChange={(e) => setPurposeChoice(e.target.value)}
+              disabled={!selectedEquipment}
               required
-            />
+              className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 disabled:bg-slate-100"
+            >
+              <option value="">-- Chọn mục đích thí nghiệm --</option>
+              {purposeOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+              <option value={PURPOSE_OTHER}>Khác: nhập thông tin chi tiết</option>
+            </select>
+            {purposeChoice === PURPOSE_OTHER && (
+              <input
+                type="text"
+                value={purposeDetail}
+                onChange={(e) => setPurposeDetail(e.target.value)}
+                placeholder="Ví dụ: Đo huỳnh quang phân tích hợp chất trong dịch chiết cây dược liệu"
+                className="mt-2 w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                required
+              />
+            )}
           </div>
 
           {/* Project Tagging Section */}
@@ -410,7 +391,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <span>Gắn Thẻ Đề Tài Nghiên Cứu <span className="text-rose-500">*</span></span>
               </label>
               <span className="text-xs text-slate-500 font-medium">
-                Hạch toán vật tư theo đề tài
+                Mã đề tài
               </span>
             </div>
 
@@ -463,123 +444,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                       Chủ nhiệm (PI): <strong>{proj.principalInvestigator}</strong> · {proj.department}
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="block text-xs text-indigo-600 font-medium">Định mức vật tư:</span>
-                    <span className="font-mono font-bold text-emerald-700">
-                      {proj.materialBudgetVND.toLocaleString('vi-VN')} ₫
-                    </span>
-                  </div>
                 </div>
               );
             })()}
-          </div>
-
-          {/* Consumable Supplies Planner Section (Optional) */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">
-            <button
-              type="button"
-              onClick={() => setIsSuppliesAccordionOpen(!isSuppliesAccordionOpen)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-slate-700 font-semibold transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Package className="w-3.5 h-3.5 text-amber-600" />
-                <span>Dự Trù Vật Tư Tiêu Hao Cho Phiên Này</span>
-                {plannedSupplies.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                    {plannedSupplies.length} loại vật tư
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
-                <span>
-                  Ước tính: <strong className="text-slate-800">{plannedSupplies.reduce((acc, s) => acc + s.totalCostVND, 0).toLocaleString('vi-VN')} ₫</strong>
-                </span>
-                <span className="text-xs">{isSuppliesAccordionOpen ? '▲' : '▼'}</span>
-              </div>
-            </button>
-
-            {isSuppliesAccordionOpen && (
-              <div className="p-3.5 bg-white space-y-3 border-t border-slate-100">
-                <p className="text-xs text-slate-500">
-                  Chọn các vật tư dự kiến sử dụng để hệ thống tự động trừ kho và hạch toán vào báo cáo tiêu hao của đề tài:
-                </p>
-
-                {/* Quick Add Supply Chips */}
-                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1 bg-slate-50 rounded-lg border border-slate-200">
-                  {catalogSupplies.map((sup) => {
-                    const isAdded = plannedSupplies.some((item) => item.supplyId === sup.id);
-                    return (
-                      <button
-                        key={sup.id}
-                        type="button"
-                        onClick={() => handleAddSupply(sup, 1)}
-                        className={`px-2.5 py-1 rounded-md text-xs transition-all flex items-center gap-1 border ${
-                          isAdded
-                            ? 'bg-amber-100 border-amber-300 text-amber-900 font-bold'
-                            : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
-                        }`}
-                      >
-                        <Plus className="w-3 h-3 text-slate-400" />
-                        <span>{sup.name}</span>
-                        <span className="text-xs text-slate-400 font-mono">({sup.unitCostVND.toLocaleString('vi-VN')}₫/{sup.unit})</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Selected Supplies Table */}
-                {plannedSupplies.length > 0 && (
-                  <div className="space-y-1.5 pt-1">
-                    <span className="font-semibold text-slate-700 text-xs">Danh sách vật tư dự trù:</span>
-                    <div className="space-y-1">
-                      {plannedSupplies.map((item) => {
-                        const supMatch = catalogSupplies.find((c) => c.id === item.supplyId);
-                        return (
-                          <div
-                            key={item.supplyId}
-                            className="p-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between gap-2"
-                          >
-                            <div className="min-w-0">
-                              <span className="font-semibold text-slate-900 block truncate">{item.supplyName}</span>
-                              <span className="text-xs text-slate-500 font-mono">
-                                Đơn giá: {item.unitCostVND.toLocaleString('vi-VN')} ₫ / {item.unit}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                              <div className="flex items-center gap-1 bg-white border border-slate-300 rounded-md p-0.5">
-                                <button
-                                  type="button"
-                                  onClick={() => supMatch && handleAddSupply(supMatch, -1)}
-                                  className="p-0.5 hover:bg-slate-100 rounded text-slate-600"
-                                >
-                                  <Minus className="w-3 h-3" />
-                                </button>
-                                <span className="font-mono font-bold text-indigo-700 px-1.5 text-xs">
-                                  {item.quantity} {item.unit}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => supMatch && handleAddSupply(supMatch, 1)}
-                                  className="p-0.5 hover:bg-slate-100 rounded text-slate-600"
-                                >
-                                  <Plus className="w-3 h-3" />
-                                </button>
-                              </div>
-
-                              <span className="font-mono font-bold text-slate-900 min-w-[70px] text-right">
-                                {item.totalCostVND.toLocaleString('vi-VN')} ₫
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Notes */}

@@ -171,12 +171,17 @@ Lần đăng nhập đầu tiên trong ngày có thể chậm hơn 1–3 giây v
 
 - **Đặt lịch**: tự duyệt nếu khung giờ trống; chặn trùng giờ (kể cả khi 2 người bấm cùng lúc — có khóa ghi), chặn giờ đã qua, chặn máy đang bảo trì. **Bắt buộc gắn đề tài**. Chỉ người có tên trong **danh sách tập huấn** của máy (và Admin) mới đặt và nhận được máy; danh sách máy hiển thị cũng theo tài khoản. Ghi chú: bộ môn mở cửa thứ Hai–Thứ Sáu, 07:30–17:00.
 - **Email xác nhận**: gửi tự động **1 giờ trước** giờ sử dụng (không gửi ngay khi đặt). **Nhắc lịch**: email khoảng 15–45 phút trước giờ bắt đầu.
-- **Tự check-out**: hết ca đã đăng ký mà người dùng chưa trả máy → hệ thống tự check-out đúng giờ kết thúc và ghi chú "[Tự động check-out]" vào nhật ký để báo cáo.
+- **Tự check-out**: hết ca đã đăng ký mà người dùng chưa trả máy → hệ thống tự check-out đúng giờ kết thúc và ghi chú "[Tự động check-out]" vào nhật ký. Hệ thống **không tự điền số lượng mẫu và tình trạng máy**: ca này được đánh dấu *cần bổ sung*, hiện cảnh báo "Quá giờ sử dụng máy" cho mọi thành viên, người sử dụng (hoặc Admin) phải nhập lại. Ghi chú của ca này hiển thị in đậm, màu đỏ.
+- **Không check-in**: đăng ký nhưng chưa nhận máy → sau 15 phút từ giờ bắt đầu hiện cảnh báo "Đăng ký nhưng chưa check-in". Người đăng ký phải check-in, hoặc xác nhận **không sử dụng máy** để ghi nhận vào nhật ký. Nếu hết khung giờ mà chưa có ghi nhận, hệ thống tự ghi nhận "không check-in" vào nhật ký (cột `logType`).
+- **Hủy lịch**: người đăng ký (hoặc Admin) hủy được lịch còn hiệu lực ngay tại mục "Ca đo của bạn trong ngày".
 - **Báo Admin**: mỗi lần nhận máy / trả máy, Admin nhận thông báo (hộp thư + email); tài khoản mới đăng ký cũng báo Admin.
 - **Thiết bị**: thời lượng tối đa mỗi ca tối thiểu 1 giờ, không giới hạn trên (Admin tự đặt cho từng máy).
-- **Đề tài**: mã tự tạo từ chữ cái đầu tên đề tài + năm bắt đầu (vd. NCNV-2026) nếu để trống; có **cơ quan chủ trì**; người tạo hoặc Admin điều chỉnh được thông tin sau khi đăng ký.
+- **Mục đích thí nghiệm**: người đăng ký chọn trong danh sách **thả chọn theo loại thiết bị** (vd. máy quang phổ UV-Vis: Xây dựng đường chuẩn, Đo độ hấp thu, Thẩm định quy trình), hoặc chọn "Khác" và nhập chi tiết. Admin điều chỉnh danh sách riêng cho từng máy (cột `purposeOptions`); để trống thì dùng mặc định theo loại.
+- **Tình trạng thiết bị**: ba mức (Tốt/Bình thường, Hao mòn nhẹ/Chấp nhận được, Cần hiệu chuẩn lại). Chọn mức 2 hoặc 3 thì **bắt buộc** ghi chú chi tiết ngay bên dưới. Khi trả máy, người vận hành **tick chọn** các việc đã hoàn tất theo danh mục của từng máy (cột `checklistItems`, Admin điều chỉnh được).
+- **Đề tài**: mã tự tạo **3–4 ký tự** từ các từ khóa chính của tên đề tài + năm bắt đầu (vd. "Xây dựng công thức viên nén paracetamol" → CTVN-2026; trùng thì thêm -2, -3); form không điền sẵn chủ nhiệm, email và cơ quan quản lý; có **cơ quan chủ trì**; người tạo hoặc Admin điều chỉnh được thông tin sau khi đăng ký.
+- **Báo cáo**: xuất **file Excel (.xlsx)** tiêu chuẩn (không lỗi font tiếng Việt) và **file PDF A4** tải trực tiếp, nhật ký sắp xếp từ cũ đến mới; người xuất chọn các cột cần thiết.
 - **Nhận máy**: trong ngày của lịch, từ 30 phút trước giờ bắt đầu đến trước giờ kết thúc. Nhận máy đột xuất (không có lịch) bị chặn nếu khung giờ hiện tại đã có người khác đặt.
-- **Trả máy**: chỉ người nhận máy hoặc Admin. Hệ thống tự tính thời lượng, giá vật tư lấy theo danh mục, **trừ tồn kho vật tư**. Báo sự cố hoặc tình trạng *Hư hỏng* → máy tự chuyển **Bảo trì** và email cho mọi Admin.
+- **Trả máy**: chỉ người nhận máy hoặc Admin. Hệ thống tự tính thời lượng. Báo sự cố → máy tự chuyển **Bảo trì** và email cho mọi Admin. (Khung vật tư tiêu hao đã bỏ khỏi form đăng ký và trả máy; máy chủ vẫn nhận và trừ tồn kho nếu có dữ liệu vật tư.)
 - **Ghi nhận bảo trì** (Admin) → máy về trạng thái Sẵn sàng.
 - **Phân quyền**: thiết bị, người dùng, bảo trì, vật tư — chỉ Admin. Ghi chú nhanh, đề tài — người tạo hoặc Admin sửa/xóa. Người dùng chỉ thấy hộp thư của mình.
 - **Tài khoản**: mật khẩu băm SHA-256 có muối; phiên đăng nhập 6 giờ kể từ lần thao tác cuối; sai mật khẩu 5 lần khóa 15 phút; quên mật khẩu bằng mã 6 số qua email; đổi mật khẩu thì các phiên cũ tự hết hiệu lực.
@@ -188,9 +193,9 @@ Lần đăng nhập đầu tiên trong ngày có thể chậm hơn 1–3 giây v
 | Sheet | Nội dung |
 |---|---|
 | `NguoiDung` | Tài khoản (cột `passwordHash`, `salt` là mật khẩu đã băm — **không sửa tay**) |
-| `ThietBi` | Danh mục thiết bị; cột `sopSteps`, `videoTutorial`, `quickChecklist`, `maintenanceConfig`, `trainedUserIds` (danh sách tập huấn) dạng JSON |
+| `ThietBi` | Danh mục thiết bị; cột `sopSteps`, `videoTutorial`, `quickChecklist`, `maintenanceConfig`, `trainedUserIds` (danh sách tập huấn), `purposeOptions`, `checklistItems` dạng JSON |
 | `LichDat` | Lịch đặt máy |
-| `NhatKySuDung` | Nhật ký nhận/trả máy |
+| `NhatKySuDung` | Nhật ký nhận/trả máy; cột `logType` (`auto` tự check-out, `not_used` không sử dụng, `no_checkin` hết ca không check-in), `needsReentry` (cần bổ sung số mẫu và tình trạng) |
 | `ThongBao` | Hộp thư trong ứng dụng (bản lưu email đã gửi) |
 | `GhiChuNhanh` | Ghi chú cấu hình theo thiết bị |
 | `BaoTri` | Phiếu bảo trì / hiệu chuẩn |

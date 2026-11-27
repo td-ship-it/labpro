@@ -11,11 +11,17 @@ import {
 import { LabStorage, localDateStr } from '../services/storage';
 import { DEPARTMENT_OPTIONS } from '../data/departments';
 
-/** Mã tự động: chữ cái đầu của mỗi từ tên đề tài + năm bắt đầu, vd. "Nghiên cứu nano" 2026 → NCN-2026. */
+/** Cụm từ chung và từ nối không phân biệt đề tài; đồng bộ với Code.gs (genProjectCode_). */
+const PROJ_PHRASES = ['xay dung', 'nghien cuu', 'danh gia', 'khao sat', 'phat trien', 'ung dung', 'de tai', 'du an',
+  'thuc nghiem', 'phan tich', 'tien hanh', 'thiet ke'];
+const PROJ_STOP = ['va', 'cua', 'cho', 'cac', 'mot', 'nhung', 'trong', 'tren', 'voi', 'theo', 've', 'tu', 'tai', 'den', 'nam', 'giai', 'doan'];
+
+/** Mã đề tài 3–4 ký tự: chữ cái đầu của các từ khóa quan trọng + năm (vd. CTVN-2026). */
 export const genProjectCode = (name: string, year: string, existing: { code: string }[], exceptCode = ''): string => {
-  const words = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
-    .split(/[^A-Za-z0-9]+/).filter(Boolean);
-  const abbr = words.map((w) => w.charAt(0)).join('').toUpperCase().slice(0, 8) || 'DT';
+  let s = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+  PROJ_PHRASES.forEach((ph) => { s = s.split(ph).join(' '); });
+  const words = s.split(/[^a-z0-9]+/).filter((w) => w && !/^\d+$/.test(w) && !PROJ_STOP.includes(w));
+  const abbr = words.map((w) => w.charAt(0)).join('').toUpperCase().slice(0, 4) || 'DT';
   const taken = new Set(existing.map((p) => p.code.toUpperCase()).filter((c) => c !== exceptCode.toUpperCase()));
   const base = `${abbr}-${year}`;
   let code = base;
@@ -101,10 +107,10 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
     code: '',
     name: '',
     leadAgency: '',
-    principalInvestigator: currentUser.name,
-    piEmail: currentUser.email,
+    principalInvestigator: '',
+    piEmail: '',
     department: DEPARTMENT_OPTIONS.includes(currentUser.department) ? currentUser.department : DEPARTMENT_OPTIONS[0],
-    fundingAgency: 'Quỹ NAFOSTED / Đề tài cấp Bộ',
+    fundingAgency: '',
     startDate: localDateStr(),
     endDate: localDateStr(new Date(new Date().setFullYear(new Date().getFullYear() + 1))),
     budgetTotalVND: 0,
@@ -862,7 +868,7 @@ export const ProjectTrackingView: React.FC<ProjectTrackingViewProps> = ({
                     placeholder={`Tự tạo: ${genProjectCode(newProjectData.name || 'Tên đề tài', (newProjectData.startDate || localDateStr()).slice(0, 4), projects, editingProjectId ? projects.find((p) => p.id === editingProjectId)?.code || '' : '')}`}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono font-bold focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 uppercase"
                   />
-                  <span className="text-xs text-slate-400 mt-0.5 block">Để trống: tạo từ chữ cái đầu tên đề tài và năm bắt đầu.</span>
+                  <span className="text-xs text-slate-400 mt-0.5 block">Để trống: hệ thống tạo mã 3–4 ký tự từ từ khóa chính của tên đề tài, kèm năm bắt đầu.</span>
                 </div>
 
                 {/* Cơ quan chủ trì */}

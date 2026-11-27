@@ -243,7 +243,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg shadow-2xs transition-colors"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Xuất File Excel (.csv)</span>
+              <span>Xuất File Excel (.xlsx)</span>
             </button>
 
             <button
@@ -701,7 +701,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 className="w-full py-2 px-3 text-xs font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Tải Bảng Tính Excel (.csv)</span>
+                <span>Tải Bảng Tính Excel (.xlsx)</span>
               </button>
             </div>
           </div>
