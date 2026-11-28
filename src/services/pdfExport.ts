@@ -56,7 +56,11 @@ export async function downloadElementAsPdf(node: HTMLElement, fileName: string):
     backgroundColor: '#ffffff',
     logging: false,
     windowWidth: Math.max(node.scrollWidth, 900),
-    onclone: (doc: Document) => normalizeColors(doc),
+    onclone: (doc: Document) => {
+      // Bản PDF luôn dùng nền sáng, không theo chế độ tối của trang
+      doc.documentElement.classList.remove('dark');
+      normalizeColors(doc);
+    },
   });
 
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });

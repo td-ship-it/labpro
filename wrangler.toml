@@ -1,6 +1,6 @@
 # Cấu hình Cloudflare Worker cho LabLog Pro.
 # Tên Worker phải TRÙNG với tên bạn đặt trên Cloudflare (Workers & Pages).
-name = "labpro"
+name = "lablog-pro"
 main = "worker/index.js"
 compatibility_date = "2026-10-01"
 # Giữ nguyên các biến/secret đã đặt trên dashboard Cloudflare khi deploy

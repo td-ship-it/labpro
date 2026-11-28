@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Chế độ tối: bật khi <html> có class "dark" (xem src/services/theme.ts) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   /* Ô chọn có tên đề tài/thiết bị dài không được làm tràn màn hình điện thoại */
   select {
@@ -116,3 +119,33 @@
   }
 }
 
+
+/* ---- Chế độ tối toàn ứng dụng: ghi đè các lớp màu sáng thường dùng ---- */
+html.dark {
+  color-scheme: dark;
+}
+html.dark body {
+  background-color: #0b1120;
+  color: #e2e8f0;
+}
+html.dark .bg-white { background-color: #111827; }
+html.dark .bg-slate-50 { background-color: #0f172a; }
+html.dark .bg-slate-100 { background-color: #1e293b; }
+html.dark .bg-slate-200 { background-color: #334155; }
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover { background-color: #1e293b; }
+html.dark .border-slate-100 { border-color: #1e293b; }
+html.dark .border-slate-200 { border-color: #334155; }
+html.dark .border-slate-300 { border-color: #475569; }
+html.dark .text-slate-900 { color: #f1f5f9; }
+html.dark .text-slate-800 { color: #e2e8f0; }
+html.dark .text-slate-700 { color: #cbd5e1; }
+html.dark .text-slate-600,
+html.dark .text-slate-500 { color: #94a3b8; }
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  border-color: #334155;
+}

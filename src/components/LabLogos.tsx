@@ -346,17 +346,17 @@ export const AcademicHeaderBadges: React.FC<{
         className={`flex items-center gap-2 px-2.5 py-1 rounded-xl transition-shadow ${
           isLight
             ? 'bg-slate-800/80 border border-slate-700 text-slate-100'
-            : 'bg-teal-50/90 border border-teal-200 text-teal-950 shadow-2xs'
+            : 'bg-teal-50/90 border border-teal-200 text-teal-950 shadow-2xs dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-100'
         }`}
         title="Đại học Y Dược TP. Hồ Chí Minh (Thành lập 1947)"
       >
         <img src="/logos/ump-hcm.jpg" alt="" width={26} height={26} className="rounded-full object-contain" />
         {showLabels && (
           <div className="flex flex-col text-left leading-none">
-            <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-teal-300' : 'text-teal-900'}`}>
+            <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-teal-300' : 'text-teal-900 dark:text-teal-300'}`}>
               ĐH Y DƯỢC TP.HCM
             </span>
-            <span className={`text-xs font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-teal-700'}`}>
+            <span className={`text-xs font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-teal-700 dark:text-slate-400'}`}>
               UMP · 1947
             </span>
           </div>
@@ -368,17 +368,17 @@ export const AcademicHeaderBadges: React.FC<{
         className={`flex items-center gap-2 px-2.5 py-1 rounded-xl transition-shadow ${
           isLight
             ? 'bg-slate-800/80 border border-slate-700 text-slate-100'
-            : 'bg-emerald-50/90 border border-emerald-200 text-emerald-950 shadow-2xs'
+            : 'bg-emerald-50/90 border border-emerald-200 text-emerald-950 shadow-2xs dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-100'
         }`}
         title="Trường Dược (Khoa Dược) - Đại học Y Dược TP.HCM"
       >
         <img src="/logos/truong-duoc.png" alt="" width={26} height={26} className="rounded-full object-contain" />
         {showLabels && (
           <div className="flex flex-col text-left leading-none">
-            <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-emerald-300' : 'text-emerald-900'}`}>
+            <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-emerald-300' : 'text-emerald-900 dark:text-emerald-300'}`}>
               TRƯỜNG DƯỢC
             </span>
-            <span className={`text-xs font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-emerald-700'}`}>
+            <span className={`text-xs font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-emerald-700 dark:text-slate-400'}`}>
               UMPSP · Khoa Dược
             </span>
           </div>
@@ -390,17 +390,17 @@ export const AcademicHeaderBadges: React.FC<{
         className={`flex items-center gap-2 px-2.5 py-1 rounded-xl transition-shadow ${
           isLight
             ? 'bg-slate-800/80 border border-slate-700 text-slate-100'
-            : 'bg-amber-50/90 border border-amber-200 text-amber-950 shadow-2xs'
+            : 'bg-amber-50/90 border border-amber-200 text-amber-950 shadow-2xs dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-100'
         }`}
         title="Bộ môn Bào chế - ĐH Y Dược TP.HCM"
       >
         <img src="/logos/bao-che.jpg" alt="" width={26} height={26} className="rounded-full object-contain" />
         {showLabels && (
           <div className="flex flex-col text-left leading-none">
-            <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-amber-300' : 'text-amber-900'}`}>
+            <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-amber-300' : 'text-amber-900 dark:text-amber-300'}`}>
               BỘ MÔN BÀO CHẾ
             </span>
-            <span className={`text-xs font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-amber-700'}`}>
+            <span className={`text-xs font-medium mt-0.5 ${isLight ? 'text-slate-400' : 'text-amber-700 dark:text-slate-400'}`}>
               Pharmaceutics Dept.
             </span>
           </div>

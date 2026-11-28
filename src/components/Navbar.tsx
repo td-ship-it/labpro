@@ -26,6 +26,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { LabLogProLogo, AcademicHeaderBadges } from './LabLogos';
+import { ThemeSwitch, ThemeToggleButton } from './ThemeSwitch';
 
 export type ActiveTab = 'dashboard' | 'calendar' | 'logbook' | 'equipment' | 'projects' | 'users' | 'analytics' | 'aidocs';
 
@@ -157,6 +158,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden xl:inline">Quick Notes</span>
             </button>
 
+            {/* Đổi nhanh Sáng / Tối */}
+            <ThemeToggleButton />
+
             {/* Email Notification Inbox Button */}
             <button
               onClick={onOpenEmails}
@@ -255,6 +259,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                           <span>Nạp danh mục thiết bị mẫu</span>
                         </button>
                       )}
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 px-4 pb-2">
+                      <p className="text-xs text-slate-500 mb-1.5">Chế độ hiển thị</p>
+                      <ThemeSwitch className="w-full justify-between" />
                     </div>
 
                     <div className="pt-2 border-t border-slate-100 px-4 pb-1">

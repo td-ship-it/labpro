@@ -2,31 +2,34 @@ import React, { useEffect, useState } from 'react';
 import { User, UserRole } from '../types';
 import { LabStorage } from '../services/storage';
 import { DEPARTMENT_OPTIONS } from '../data/departments';
-import { 
-  FlaskConical, 
-  ShieldCheck, 
-  GraduationCap, 
-  Microscope, 
-  Lock, 
-  Mail, 
-  User as UserIcon, 
-  Building2, 
-  Phone, 
-  AlertCircle, 
-  CheckCircle2, 
+import {
+  Lock,
+  Mail,
+  User as UserIcon,
+  Phone,
+  AlertCircle,
+  CheckCircle2,
   ArrowRight,
   Sparkles,
+  ShieldCheck,
+  Microscope,
+  GraduationCap,
 } from 'lucide-react';
-import { 
-  LabLogProLogo, 
-  AcademicHeaderBadges,
-} from './LabLogos';
-
-
+import { LabLogProLogo, AcademicHeaderBadges } from './LabLogos';
+import { ThemeSwitch } from './ThemeSwitch';
 
 interface AuthPageProps {
   onLoginSuccess: (user: User) => void;
 }
+
+// Lớp dùng chung cho ô nhập (sáng mặc định, tối khi <html> có class "dark")
+const FIELD =
+  'w-full py-2.5 text-sm rounded-lg border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500';
+const LABEL = 'block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1';
+const ICON = 'w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none';
+const PRIMARY_BTN =
+  'w-full py-2.5 px-4 text-sm font-bold text-white rounded-lg shadow-md transition-colors flex items-center justify-center gap-2 disabled:opacity-60';
+const LINK = 'text-xs font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300';
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');
@@ -148,125 +151,143 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between relative overflow-hidden">
-      {/* Background Decorative Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-dvh flex flex-col relative overflow-x-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      {/* Trang trí nền (nhẹ, không tràn ngang) */}
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-50" />
+      <div className="absolute -top-32 -right-24 w-80 h-80 rounded-full bg-blue-400/20 dark:bg-blue-600/10 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 -left-24 w-80 h-80 rounded-full bg-teal-400/15 dark:bg-indigo-600/10 blur-3xl pointer-events-none" />
 
-      {/* Top Brand Bar */}
-      <header className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between border-b border-slate-800/80">
-        <div className="flex items-center gap-3">
-          <LabLogProLogo size={40} className="[&_span]:text-white [&_span.text-slate-500]:text-slate-400" />
-        </div>
-
-        {/* Academic Seals (ĐH Y Dược TP.HCM - Trường Dược - Bộ môn Bào chế) */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <AcademicHeaderBadges textColor="light" />
+      {/* Thanh thương hiệu: logo + chế độ hiển thị; logo học thuật hiện dưới dạng ảnh trên điện thoại */}
+      <header className="relative z-10 w-full border-b border-slate-200 bg-white/85 backdrop-blur dark:border-slate-800 dark:bg-slate-900/85">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3 min-w-0">
+            <LabLogProLogo
+              size={36}
+              className="min-w-0 max-sm:[&_span.text-slate-500]:hidden [&_span.text-slate-900]:text-slate-900 dark:[&_span.text-slate-900]:text-white [&_span.text-slate-500]:text-slate-500 dark:[&_span.text-slate-500]:text-slate-400"
+            />
+            <ThemeSwitch className="shrink-0" />
+          </div>
+          <div className="sm:hidden">
+            <AcademicHeaderBadges compact />
+          </div>
+          <div className="hidden sm:block">
+            <AcademicHeaderBadges />
+          </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col lg:flex-row items-center justify-center gap-10">
-        {/* Left: Introduction & Highlights */}
-        <div className="lg:w-1/2 space-y-5 text-center lg:text-left">
-          <div className="flex items-center justify-center lg:justify-start gap-2 flex-wrap">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Cổng Đăng Ký Trực Tuyến & Quản Trị Phòng Lab</span>
-            </div>
+      <main className="relative z-10 flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex flex-col lg:flex-row items-stretch lg:items-center justify-center gap-8 lg:gap-12">
+        {/* Giới thiệu */}
+        <section className="w-full min-w-0 lg:flex-1 space-y-4 text-center lg:text-left">
+          <div className="inline-flex max-w-full items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300 text-xs font-semibold">
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Cổng Đăng Ký Trực Tuyến & Quản Trị Phòng Lab</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-            Quản lý lịch & nhật ký<br /> thiết bị khoa học
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-slate-900 dark:text-white">
+            Quản lý lịch & nhật ký thiết bị khoa học
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
             Mỗi giảng viên, nghiên cứu viên và người hướng dẫn được cấp tài khoản riêng để chủ động đăng ký sử dụng. Tự động kiểm tra xung đột thời gian thực và ghi nhận nhật ký Check-in/Check-out minh bạch.
           </p>
 
-        </div>
+          <ul className="grid gap-2.5 text-left max-w-xl mx-auto lg:mx-0 text-sm text-slate-700 dark:text-slate-300">
+            {[
+              { icon: ShieldCheck, text: 'Chống trùng lịch tự động theo thời gian thực' },
+              { icon: Microscope, text: 'Nhật ký check-in/out và tình trạng máy rõ ràng' },
+              { icon: GraduationCap, text: 'Xuất báo cáo Excel và PDF cho bộ môn' },
+            ].map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-start gap-2.5">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300">
+                  <Icon className="w-3.5 h-3.5" />
+                </span>
+                <span className="min-w-0">{text}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-        {/* Right: Auth Box (Login / Register Card) */}
-        <div className="lg:w-1/2 max-w-md w-full bg-slate-800/90 backdrop-blur-md rounded-2xl border border-slate-700 p-6 sm:p-8 shadow-2xl space-y-5">
-          {/* Mode Switch Tabs */}
-          <div className={`grid ${registrationOpen ? 'grid-cols-2' : 'grid-cols-1'} p-1 bg-slate-900/80 rounded-xl border border-slate-700/60 text-xs font-semibold`}>
+        {/* Thẻ đăng nhập / đăng ký */}
+        <section className="w-full min-w-0 lg:w-[28rem] lg:shrink-0 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7 shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-800/90 dark:shadow-black/30 space-y-5">
+          {/* Chuyển tab */}
+          <div className={`grid ${registrationOpen ? 'grid-cols-2' : 'grid-cols-1'} p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold dark:bg-slate-900/70 dark:border-slate-700`}>
             <button
+              type="button"
               onClick={() => switchMode('login')}
               className={`py-2 rounded-lg transition-colors text-center ${
                 authMode !== 'register'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
               }`}
             >
               Đăng Nhập
             </button>
             {registrationOpen && (
-            <button
-              onClick={() => switchMode('register')}
-              className={`py-2 rounded-lg transition-colors text-center ${
-                authMode === 'register'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Đăng Ký Tài Khoản
-            </button>
+              <button
+                type="button"
+                onClick={() => switchMode('register')}
+                className={`py-2 rounded-lg transition-colors text-center ${
+                  authMode === 'register'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                Đăng Ký Tài Khoản
+              </button>
             )}
           </div>
 
           {infoMsg && (
-            <div className="p-3 text-xs text-emerald-200 bg-emerald-950/60 border border-emerald-800 rounded-lg flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-              <span>{infoMsg}</span>
+            <div className="p-3 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-2 dark:text-emerald-200 dark:bg-emerald-950/60 dark:border-emerald-800">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span className="min-w-0">{infoMsg}</span>
             </div>
           )}
 
           {errorMsg && (
-            <div className="p-3 text-xs text-rose-300 bg-rose-950/60 border border-rose-800 rounded-lg flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-              <span>{errorMsg}</span>
+            <div className="p-3 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2 dark:text-rose-300 dark:bg-rose-950/60 dark:border-rose-800">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+              <span className="min-w-0">{errorMsg}</span>
             </div>
           )}
 
-          {/* TAB 1: LOGIN */}
+          {/* TAB 1: ĐĂNG NHẬP */}
           {authMode === 'login' && (
             <div className="space-y-5">
               <form onSubmit={handleLoginSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Email công tác / trường học
-                  </label>
+                  <label className={LABEL}>Email công tác / trường học</label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                    <Mail className={ICON} />
                     <input
                       type="email"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       placeholder="email@truong.edu.vn"
                       autoComplete="username"
-                      className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono"
+                      className={`${FIELD} pl-9 pr-3 font-mono`}
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-300 mb-1">
-                    <span>Mật khẩu</span>
-                    <button type="button" onClick={() => switchMode('forgot')} className="text-xs text-blue-400 hover:text-blue-300 font-normal">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Mật khẩu</span>
+                    <button type="button" onClick={() => switchMode('forgot')} className={LINK}>
                       Quên mật khẩu?
                     </button>
                   </div>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                    <Lock className={ICON} />
                     <input
                       type="password"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder="••••••••"
                       autoComplete="current-password"
-                      className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      className={`${FIELD} pl-9 pr-3`}
                       required
                     />
                   </div>
@@ -275,7 +296,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="w-full py-2.5 px-4 text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-lg shadow-blue-600/30 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                  className={`${PRIMARY_BTN} bg-blue-600 hover:bg-blue-700 shadow-blue-600/20`}
                 >
                   <span>{busy ? 'Đang đăng nhập...' : 'Đăng Nhập Vào Hệ Thống'}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -283,20 +304,22 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
               </form>
 
               {config.registration === 'approval' && (
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Chưa có tài khoản? Chọn <strong>Đăng Ký Tài Khoản</strong>; Quản trị viên phòng Lab sẽ kích hoạt sau khi xác minh.
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Chưa có tài khoản? Chọn <strong className="text-slate-700 dark:text-slate-200">Đăng Ký Tài Khoản</strong>; Quản trị viên phòng Lab sẽ kích hoạt sau khi xác minh.
                 </p>
               )}
               {config.registration === 'closed' && (
-                <p className="text-xs text-slate-400 leading-relaxed">Tài khoản do Quản trị viên phòng Lab cấp. Vui lòng liên hệ để được cấp quyền.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Tài khoản do Quản trị viên phòng Lab cấp. Vui lòng liên hệ để được cấp quyền.
+                </p>
               )}
             </div>
           )}
 
-          {/* TAB: FORGOT PASSWORD */}
+          {/* TAB: QUÊN MẬT KHẨU */}
           {authMode === 'forgot' && (
             <form onSubmit={handleForgotSubmit} className="space-y-4">
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 {resetStep === 'email'
                   ? 'Nhập email tài khoản. Hệ thống sẽ gửi mã xác nhận 6 số để đặt mật khẩu mới.'
                   : 'Nhập mã 6 số trong email và mật khẩu mới.'}
@@ -307,7 +330,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="email@truong.edu.vn"
                 disabled={resetStep === 'code'}
-                className="w-full px-3 py-2.5 text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white font-mono disabled:opacity-60"
+                className={`${FIELD} px-3 font-mono`}
                 required
               />
               {resetStep === 'code' && (
@@ -319,7 +342,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                     value={resetCode}
                     onChange={(e) => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="Mã 6 số"
-                    className="w-full px-3 py-2.5 text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white font-mono tracking-widest"
+                    className={`${FIELD} px-3 font-mono tracking-widest`}
                     required
                   />
                   <input
@@ -328,102 +351,89 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                     value={resetPw}
                     onChange={(e) => setResetPw(e.target.value)}
                     placeholder="Mật khẩu mới (tối thiểu 6 ký tự)"
-                    className="w-full px-3 py-2.5 text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white"
+                    className={`${FIELD} px-3`}
                     required
                   />
                 </>
               )}
-              <button
-                type="submit"
-                disabled={busy}
-                className="w-full py-2.5 px-4 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg disabled:opacity-60"
-              >
+              <button type="submit" disabled={busy} className={`${PRIMARY_BTN} bg-blue-600 hover:bg-blue-700 shadow-blue-600/20`}>
                 {busy ? 'Đang xử lý...' : resetStep === 'email' ? 'Gửi mã xác nhận' : 'Đặt mật khẩu mới'}
               </button>
-              <button type="button" onClick={() => switchMode('login')} className="w-full text-xs text-slate-400 hover:text-white">
+              <button type="button" onClick={() => switchMode('login')} className={`w-full text-center ${LINK}`}>
                 ← Quay lại đăng nhập
               </button>
             </form>
           )}
 
-          {/* TAB 2: REGISTER */}
+          {/* TAB 2: ĐĂNG KÝ */}
           {authMode === 'register' && (
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Họ và tên <span className="text-rose-400">*</span>
+                <label className={LABEL}>
+                  Họ và tên <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <UserIcon className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                  <UserIcon className={ICON} />
                   <input
                     type="text"
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     placeholder="vd: TS. Phạm Đình Duy"
-                    className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    className={`${FIELD} pl-9 pr-3`}
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Email công tác (dùng để đăng nhập) <span className="text-rose-400">*</span>
+                <label className={LABEL}>
+                  Email công tác (dùng để đăng nhập) <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                  <Mail className={ICON} />
                   <input
                     type="email"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
                     placeholder="email@truong.edu.vn"
                     autoComplete="email"
-                    className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono"
+                    className={`${FIELD} pl-9 pr-3 font-mono`}
                     required
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Vai trò <span className="text-rose-400">*</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="min-w-0">
+                  <label className={LABEL}>
+                    Vai trò <span className="text-rose-500">*</span>
                   </label>
-                  <select
-                    value={regRole}
-                    onChange={(e) => setRegRole(e.target.value as UserRole)}
-                    className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white"
-                  >
+                  <select value={regRole} onChange={(e) => setRegRole(e.target.value as UserRole)} className={`${FIELD} px-2.5`}>
                     <option value="instructor">Giảng viên</option>
                     <option value="researcher">Trợ giảng/KTV bộ môn Bào chế</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Số điện thoại
-                  </label>
+                <div className="min-w-0">
+                  <label className={LABEL}>Số điện thoại</label>
                   <div className="relative">
-                    <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+                    <Phone className={ICON} />
                     <input
                       type="text"
+                      inputMode="tel"
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
                       placeholder="0912..."
-                      className="w-full pl-8 pr-2 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white font-mono"
+                      className={`${FIELD} pl-9 pr-3 font-mono`}
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Bộ môn / Trung tâm <span className="text-rose-400">*</span>
+                <label className={LABEL}>
+                  Bộ môn / Trung tâm <span className="text-rose-500">*</span>
                 </label>
-                <select
-                  value={regDeptChoice}
-                  onChange={(e) => setRegDeptChoice(e.target.value)}
-                  className="w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white"
-                >
+                <select value={regDeptChoice} onChange={(e) => setRegDeptChoice(e.target.value)} className={`${FIELD} px-2.5`}>
                   {DEPARTMENT_OPTIONS.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
@@ -434,18 +444,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                     value={regDeptOther}
                     onChange={(e) => setRegDeptOther(e.target.value)}
                     placeholder="Nhập tên bộ môn / trung tâm"
-                    className="mt-2 w-full px-2.5 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white"
+                    className={`${FIELD} px-2.5 mt-2`}
                     required
                   />
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Mật khẩu <span className="text-rose-400">*</span>
+                <label className={LABEL}>
+                  Mật khẩu <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                  <Lock className={ICON} />
                   <input
                     type="password"
                     value={regPassword}
@@ -453,7 +463,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                     placeholder="Tối thiểu 6 ký tự"
                     autoComplete="new-password"
                     required
-                    className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-900/80 border border-slate-700 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    className={`${FIELD} pl-9 pr-3`}
                   />
                 </div>
               </div>
@@ -461,18 +471,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full mt-2 py-2.5 px-4 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-lg shadow-emerald-600/30 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                className={`${PRIMARY_BTN} mt-2 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20`}
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{busy ? 'Đang gửi...' : config.registration === 'open' ? 'Hoàn Tất Đăng Ký & Đăng Nhập' : 'Gửi Đăng Ký'}</span>
               </button>
             </form>
           )}
-        </div>
+        </section>
       </main>
 
-      {/* Bottom Footer */}
-      <footer className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-xs text-slate-500 border-t border-slate-800">
+      <footer className="relative z-10 w-full border-t border-slate-200 dark:border-slate-800 px-4 py-4 text-center text-xs text-slate-500">
         <span>© 2026 LabLog Pro · Hệ thống quản lý và nhật ký thiết bị khoa học phòng thí nghiệm</span>
       </footer>
     </div>
